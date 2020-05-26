@@ -1,11 +1,10 @@
 using Test
 
-using SafeREPL # for @swapliterals
-using SafeREPL: swapliterals
+using SafeREPL: literalswapper, @swapliterals
 using BitIntegers, SaferIntegers
 
 @testset "swapliterals" begin
-    swapbig = swapliterals(:BigFloat, :big, "@big_str")
+    swapbig = literalswapper(:BigFloat, :big, "@big_str")
     @test swapbig(1) == :(big(1))
     @test swapbig(1.2) == :(BigFloat(1.2))
 
@@ -44,7 +43,7 @@ using BitIntegers, SaferIntegers
         @test x isa BigInt
     end
 
-    swap128 = swapliterals(:Float64, :Int128, "@int128_str")
+    swap128 = literalswapper(:Float64, :Int128, "@int128_str")
     x = eval(swap128(1))
     @test x == 1 && x isa Int128
     x = eval(swap128(:11111111111111111111))
@@ -61,7 +60,7 @@ using BitIntegers, SaferIntegers
         @test x isa BigInt
     end
 
-    swapnothing = swapliterals(nothing, nothing, nothing)
+    swapnothing = literalswapper(nothing, nothing, nothing)
     x = eval(swapnothing(1.0))
     @test x isa Float64
     x = eval(swapnothing(:11111111111111111111))
@@ -79,7 +78,7 @@ using BitIntegers, SaferIntegers
     end
 
     # pass :big instead of a string macro
-    swaponly128 = swapliterals(nothing, nothing, :big)
+    swaponly128 = literalswapper(nothing, nothing, :big)
     x = eval(swaponly128(:11111111111111111111))
     @test x isa BigInt
 
@@ -89,13 +88,13 @@ using BitIntegers, SaferIntegers
     end
 
     # pass symbol for Int128
-    swapBitIntegers = swapliterals(nothing, :Int256, :Int256)
+    swapBitIntegers = literalswapper(nothing, :Int256, :Int256)
     x = eval(swapBitIntegers(123))
     @test x isa Int256
     x = eval(swapBitIntegers(:11111111111111111111))
     @test x isa Int256
 
-    swapSaferIntegers = swapliterals(nothing, :SafeInt, :SafeInt128)
+    swapSaferIntegers = literalswapper(nothing, :SafeInt, :SafeInt128)
     x = eval(swapSaferIntegers(123))
     @test x isa SafeInt
     x = eval(swapSaferIntegers(:11111111111111111111))
@@ -116,7 +115,7 @@ using BitIntegers, SaferIntegers
     end
 
     # pass symbol for BigInt
-    swapbig = swapliterals(nothing, nothing, :Int1024, :Int1024)
+    swapbig = literalswapper(nothing, nothing, :Int1024, :Int1024)
     x = eval(swapbig(:11111111111111111111))
     @test x isa Int1024
     x = eval(swapbig(:1111111111111111111111111111111111111111))
@@ -129,7 +128,7 @@ using BitIntegers, SaferIntegers
         @test x isa Int1024
     end
 
-    swapbig = swapliterals(nothing, nothing, :big, :big)
+    swapbig = literalswapper(nothing, nothing, :big, :big)
     x = eval(swapbig(:11111111111111111111))
     @test x isa BigInt
     x = eval(swapbig(:1111111111111111111111111111111111111111))

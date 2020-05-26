@@ -1,20 +1,18 @@
 module SafeREPL
 
-export @swapliterals
-
 using REPL
 
 function __init__()
     activate = get(ENV, "SAFEREPL_INIT", "true")
     if activate == "true"
-        setdefaults(:big, :big, :big)
+        swapliterals!(:big, :big, :big)
     end
 end
 
 const SmallArgs = Union{Nothing,Symbol}
 const BigArgs = Union{Nothing,String,Symbol}
 
-function swapliterals(@nospecialize(swapfloat::SmallArgs),
+function literalswapper(@nospecialize(swapfloat::SmallArgs),
                       @nospecialize(swapint::SmallArgs),
                       @nospecialize(swapint128::BigArgs),
                       @nospecialize(swapbig::BigArgs)=nothing)
@@ -76,15 +74,15 @@ function get_transforms()
     end
 end
 
-function setdefaults(@nospecialize(F::SmallArgs), @nospecialize(I::SmallArgs),
-                     @nospecialize(I128::BigArgs)=nothing,
-                     @nospecialize(B::BigArgs)=nothing)
+function swapliterals!(@nospecialize(F::SmallArgs), @nospecialize(I::SmallArgs),
+                       @nospecialize(I128::BigArgs)=nothing,
+                       @nospecialize(B::BigArgs)=nothing)
     transforms = get_transforms()
     filter!(f -> parentmodule(f) != @__MODULE__, transforms)
     if transforms === nothing
         @warn "$(@__MODULE__) could not be loaded"
     else
-        push!(transforms, swapliterals(F, I, I128, B))
+        push!(transforms, literalswapper(F, I, I128, B))
     end
     nothing
 end
@@ -108,7 +106,7 @@ function swapliterals_macro(F, I, I128, B, ex)
     I = transform_arg(I)
     I128 = transform_arg(I128)
     B = transform_arg(B)
-    swapliterals(F, I, I128, B)(ex)
+    literalswapper(F, I, I128, B)(ex)
 end
 
 macro swapliterals(args...)

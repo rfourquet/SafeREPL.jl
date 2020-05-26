@@ -13,9 +13,9 @@ end
 function swapliterals(@nospecialize(swapfloat), @nospecialize(swapint),
                       @nospecialize(swapint128))
     function swapper(@nospecialize(ex))
-        if ex isa Float64
+        if swapfloat !== nothing && ex isa Float64
             :($swapfloat($ex))
-        elseif ex isa Int
+        elseif swapint !== nothing && ex isa Int
             :($swapint($ex))
         elseif swapint128 !== nothing && ex isa Expr && ex.head == :macrocall &&
             ex.args[1] isa GlobalRef && ex.args[1].name == Symbol("@int128_str")

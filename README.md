@@ -1,5 +1,7 @@
 ## SafeREPL
 
+[![Build Status](https://travis-ci.org/rfourquet/SafeREPL.jl.svg?branch=master)](https://travis-ci.org/rfourquet/SafeREPL.jl)
+
 The `SafeREPL` package allows to swap the meaning of default float and
 integer literals (for `Int`, `Int128` and `BigInt`).
 By default, the new defaults are `BigFloat` and `BigInt`.

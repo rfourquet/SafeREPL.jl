@@ -27,6 +27,7 @@ function __init__()
                  elseif isdefined(REPL, :repl_ast_transforms)
                      REPL.repl_ast_transforms
                  else
+                     @warn "$(@__MODULE__) could not be loaded"
                      nothing
                  end
     if transforms !== nothing

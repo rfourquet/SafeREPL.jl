@@ -5,14 +5,24 @@ using REPL
 function __init__()
     activate = get(ENV, "SAFEREPL_INIT", "true")
     if activate == "true"
-        setdefaults(big, big)
+        setdefaults(big, big, Symbol("@big_str"))
     end
 end
 
 
-function swapliterals(@nospecialize(swapfloat), @nospecialize(swapint))
+function swapliterals(@nospecialize(swapfloat), @nospecialize(swapint),
+                      @nospecialize(swapint128))
     function swapper(@nospecialize(ex))
-        if ex isa Expr
+        if ex isa Float64
+            :($swapfloat($ex))
+        elseif ex isa Int
+            :($swapint($ex))
+        elseif swapint128 !== nothing && ex isa Expr && ex.head == :macrocall &&
+            ex.args[1] isa GlobalRef && ex.args[1].name == Symbol("@int128_str")
+
+            ex.args[1] = Symbol(swapint128)
+            ex
+        elseif ex isa Expr
             h = ex.head
             # copied from REPL.softscope
             if h in (:meta, :import, :using, :export, :module, :error, :incomplete, :thunk)
@@ -22,10 +32,6 @@ function swapliterals(@nospecialize(swapfloat), @nospecialize(swapint))
                 map!(swapper, resize!(ex′.args, length(ex.args)), ex.args)
                 ex′
             end
-        elseif ex isa Int
-            :($swapint($ex))
-        elseif ex isa Float64
-            :($swapfloat($ex))
         else
             ex
         end
@@ -43,13 +49,13 @@ function get_transforms()
     end
 end
 
-function setdefaults(@nospecialize(F), @nospecialize(I))
+function setdefaults(@nospecialize(F), @nospecialize(I), @nospecialize(I128)=nothing)
     transforms = get_transforms()
     filter!(f -> parentmodule(f) != @__MODULE__, transforms)
     if transforms === nothing
         @warn "$(@__MODULE__) could not be loaded"
     else
-        push!(transforms, swapliterals(F, I))
+        push!(transforms, swapliterals(F, I, I128))
     end
 end
 

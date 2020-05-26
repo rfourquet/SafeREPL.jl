@@ -83,6 +83,7 @@ x = @swapliterals :big :big :big begin
     1.0, 2^123
 end
 typeof(x) # Tuple{BigFloat,BigInt}
+x = @swapliterals (1.0, 2^123) # shorter version, uses :big as defaults
 ```
 Note: if you try the above at the REPL, `typeof(x)` will be `Tuple{BigFloat,BigInt}`.
 Try first `SafeREPL.swapliterals!(nothing, nothing, nothing)` to deactivate `SafeREPL`.

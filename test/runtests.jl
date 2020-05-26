@@ -1,9 +1,10 @@
 using Test
 
 using SafeREPL: swapliterals
+using BitIntegers, SaferIntegers
 
 @testset "swapliterals" begin
-    swapbig = swapliterals(BigFloat, big, Symbol("@big_str"))
+    swapbig = swapliterals(BigFloat, big, "@big_str")
     @test swapbig(1) == :($big(1))
     @test swapbig(1.2) == :($BigFloat(1.2))
 
@@ -24,7 +25,7 @@ using SafeREPL: swapliterals
     x = eval(swapbig(:1111111111111111111111111111111111111111))
     @test x isa BigInt
 
-    swap128 = swapliterals(Float64, :Int128, Symbol("@int128_str"))
+    swap128 = swapliterals(Float64, :Int128, "@int128_str")
     x = eval(swap128(1))
     @test x == 1 && x isa Int128
     x = eval(swap128(:11111111111111111111))
@@ -44,4 +45,16 @@ using SafeREPL: swapliterals
     swaponly128 = swapliterals(nothing, nothing, :big)
     x = eval(swaponly128(:11111111111111111111))
     @test x isa BigInt
+
+    # pass symbol for Int128
+    swapBitIntegers = swapliterals(nothing, Int256, :Int256)
+    x = eval(swapBitIntegers(123))
+    @test x isa Int256
+    x = eval(swapBitIntegers(:11111111111111111111))
+    @test x isa Int256
+    swapSaferIntegers = swapliterals(nothing, :SafeInt, :SafeInt128)
+    x = eval(swapSaferIntegers(123))
+    @test x isa SafeInt
+    x = eval(swapSaferIntegers(:11111111111111111111))
+    @test x isa SafeInt128
 end

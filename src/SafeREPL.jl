@@ -5,13 +5,13 @@ using REPL
 function __init__()
     activate = get(ENV, "SAFEREPL_INIT", "true")
     if activate == "true"
-        setdefaults(big, big, Symbol("@big_str"))
+        setdefaults(big, big, "@big_str")
     end
 end
 
 
 function swapliterals(@nospecialize(swapfloat), @nospecialize(swapint),
-                      @nospecialize(swapint128))
+                      @nospecialize(swapint128::Union{Nothing,String,Symbol}))
     function swapper(@nospecialize(ex))
         if swapfloat !== nothing && ex isa Float64
             :($swapfloat($ex))
@@ -21,11 +21,14 @@ function swapliterals(@nospecialize(swapfloat), @nospecialize(swapint),
             ex.args[1] isa GlobalRef && ex.args[1].name == Symbol("@int128_str")
 
             if swapint128 == :big
-                swapint128 = Symbol("@big_str")
+                swapint128 = "@big_str"
             end
-
-            ex.args[1] = Symbol(swapint128)
-            ex
+            if swapint128 isa String
+                ex.args[1] = Symbol(swapint128)
+                ex
+            else # Symbol
+                :($swapint128($ex))
+            end
         elseif ex isa Expr
             h = ex.head
             # copied from REPL.softscope

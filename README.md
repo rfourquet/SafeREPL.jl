@@ -94,3 +94,9 @@ julia> big"1.2"
 * Using different number types as default in the REPL might reveal many missing methods
   for these types and render the REPL less usable than ideal.
   Time for opening ticket/issues in the corresponding projects :)
+
+### Alternatives
+
+Before Julia 1.5, the easiest alternative was probably to use a custom REPL mode,
+and [ReplMaker.jl](https://github.com/MasonProtter/ReplMaker.jl#example-3-big-mode)
+even has an example to set this up in few lines.

@@ -73,6 +73,23 @@ ERROR: LoadError: OverflowError: overflow parsing "1234..."
 [...]
 ```
 
+### How to use in source code?
+
+Via the `@swapliterals` macro, with the same arguments as the `setdefaults` function:
+```julia
+using SafeREPL
+
+x = @swapliterals :big :big :big begin
+    1.0, 2^123
+end
+typeof(x) # Tuple{BigFloat,BigInt}
+```
+Note: if you try the above at the REPL, `typeof(x)` will be `Tuple{BigFloat,BigInt}`.
+Try first `SafeREPL.setdefaults(nothing, nothing, nothing)` to deactivate `SafeREPL`.
+
+_Warning_: this is alpha software and it's not recommended to use this macro in production.
+
+
 ### Installation
 
 This package requires Julia version at least 1.5. It is not yet registered,

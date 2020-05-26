@@ -1,5 +1,7 @@
 module SafeREPL
 
+export @swapliterals
+
 using REPL
 
 function __init__()
@@ -86,5 +88,40 @@ function setdefaults(@nospecialize(F::SmallArgs), @nospecialize(I::SmallArgs),
     end
     nothing
 end
+
+
+## macro
+
+transform_arg(@nospecialize(x)) =
+    if x isa QuoteNode
+        x.value
+    elseif x == :nothing
+        nothing
+    elseif x isa String
+        x
+    else
+        throw(ArgumentError("invalid argument"))
+    end
+
+function swapliterals_macro(F, I, I128, B, ex)
+    F = transform_arg(F)
+    I = transform_arg(I)
+    I128 = transform_arg(I128)
+    B = transform_arg(B)
+    swapliterals(F, I, I128, B)(ex)
+end
+
+macro swapliterals(args...)
+    if length(args) == 1
+        swapliterals_macro(:(:big), :(:big), :(:big), :nothing, esc(args[1]))
+    elseif length(args) == 4
+        swapliterals_macro(args[1], args[2], args[3], :nothing, esc(args[4]))
+    elseif length(args) == 5
+        swapliterals_macro(args[1:4]..., esc(args[5]))
+    else
+        throw(ArgumentError("wrong number of arguments"))
+    end
+end
+
 
 end # module

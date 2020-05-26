@@ -61,6 +61,7 @@ function setdefaults(@nospecialize(F), @nospecialize(I), @nospecialize(I128)=not
     else
         push!(transforms, swapliterals(F, I, I128))
     end
+    nothing
 end
 
 end # module

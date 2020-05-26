@@ -2,6 +2,9 @@ module BigInREPL
 
 using REPL
 
+__init__() = setdefaults(big, big)
+
+
 function swapliterals(@nospecialize(swapint), @nospecialize(swapfloat))
     function swapper(@nospecialize(ex))
         if ex isa Expr
@@ -24,22 +27,14 @@ function swapliterals(@nospecialize(swapint), @nospecialize(swapfloat))
     end
 end
 
-get_transforms() =
-    transforms = if isdefined(Base, :active_repl_backend) &&
-                         isdefined(Base.active_repl_backend, :ast_transforms)
-                     Base.active_repl_backend.ast_transforms
-                 elseif isdefined(REPL, :repl_ast_transforms)
-                     REPL.repl_ast_transforms
-                 else
-                     nothing
-                 end
-
-function __init__()
-    transforms = get_transforms()
-    if transforms !== nothing
-        push!(transforms, swapliterals(big, big))
+function get_transforms()
+    if isdefined(Base, :active_repl_backend) &&
+        isdefined(Base.active_repl_backend, :ast_transforms)
+        Base.active_repl_backend.ast_transforms
+    elseif isdefined(REPL, :repl_ast_transforms)
+        REPL.repl_ast_transforms
     else
-        @warn "$(@__MODULE__) could not be loaded"
+        nothing
     end
 end
 

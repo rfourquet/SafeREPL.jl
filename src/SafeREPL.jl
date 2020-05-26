@@ -20,6 +20,10 @@ function swapliterals(@nospecialize(swapfloat), @nospecialize(swapint),
         elseif swapint128 !== nothing && ex isa Expr && ex.head == :macrocall &&
             ex.args[1] isa GlobalRef && ex.args[1].name == Symbol("@int128_str")
 
+            if swapint128 == :big
+                swapint128 = Symbol("@big_str")
+            end
+
             ex.args[1] = Symbol(swapint128)
             ex
         elseif ex isa Expr

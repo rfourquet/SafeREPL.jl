@@ -39,4 +39,9 @@ using SafeREPL: swapliterals
     @test x isa Int128
     x = eval(swapnothing(:1111111111111111111111111111111111111111))
     @test x isa BigInt
+
+    # pass :big instead of a string macro
+    swaponly128 = swapliterals(nothing, nothing, :big)
+    x = eval(swaponly128(:11111111111111111111))
+    @test x isa BigInt
 end

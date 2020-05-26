@@ -2,8 +2,8 @@ module BigInREPL
 
 using REPL
 
-function swapint(@nospecialize(bigger))
-    function swapintex(@nospecialize(ex))
+function swapliterals(@nospecialize(swapint), @nospecialize(swapfloat))
+    function swapper(@nospecialize(ex))
         if ex isa Expr
             h = ex.head
             # copied from REPL.softscope
@@ -11,11 +11,13 @@ function swapint(@nospecialize(bigger))
                 ex
             else
                 ex′ = Expr(h)
-                map!(swapintex, resize!(ex′.args, length(ex.args)), ex.args)
+                map!(swapper, resize!(ex′.args, length(ex.args)), ex.args)
                 ex′
             end
         elseif ex isa Int
-            :($bigger($ex))
+            :($swapint($ex))
+        elseif ex isa Float64
+            :($swapfloat($ex))
         else
             ex
         end
@@ -35,19 +37,19 @@ get_transforms() =
 function __init__()
     transforms = get_transforms()
     if transforms !== nothing
-        push!(transforms, swapint(big))
+        push!(transforms, swapliterals(big, big))
     else
         @warn "$(@__MODULE__) could not be loaded"
     end
 end
 
-function setdefaultint(@nospecialize(T))
+function setdefaults(@nospecialize(I), @nospecialize(F))
     transforms = get_transforms()
     filter!(f -> parentmodule(f) != @__MODULE__, transforms)
     if transforms === nothing
         @warn "$(@__MODULE__) could not be loaded"
     else
-        push!(transforms, swapint(T))
+        push!(transforms, swapliterals(I, F))
     end
 end
 

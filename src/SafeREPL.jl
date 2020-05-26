@@ -2,7 +2,12 @@ module SafeREPL
 
 using REPL
 
-__init__() = setdefaults(big, big)
+function __init__()
+    activate = get(ENV, "SAFEREPL_INIT", "true")
+    if activate == "true"
+        setdefaults(big, big)
+    end
+end
 
 
 function swapliterals(@nospecialize(swapint), @nospecialize(swapfloat))

@@ -20,6 +20,9 @@ These can be changed via `SafeREPL.swapliterals!`. The four arguments of this
 function correspond to `Float64`, `Int`, `Int128`, `BigInt`. Passing `nothing`
 means not transforming them, and a symbol is interpreted as a function name
 to be applied to the value. The last argument defaults to `nothing`.
+Finally, `swapliterals!(false)` deactivates `SafeREPL` and `swapliterals!(true)`
+or `swapliterals!()` activates the defaults (what is enabled with `using SafeREPL`,
+which is equivalent to `swapliterals(:big, :big, :big)`).
 ```julia
 julia> using BitIntegers, BitFloats
 
@@ -55,6 +58,16 @@ julia> factorial(100)
 
 julia> typeof(ans)
 fmpz
+
+julia> SafeREPL.swapliterals!(false)
+
+julia> typeof(1), typeof(1.0)
+(Int64, Float64)
+
+julia> SafeREPL.swapliterals!(true)
+
+julia> typeof(1), typeof(1.0)
+(BigInt, BigFloat)
 ```
 
 ### String macros
@@ -86,7 +99,7 @@ typeof(x) # Tuple{BigFloat,BigInt}
 x = @swapliterals (1.0, 2^123) # shorter version, uses :big as defaults
 ```
 Note: if you try the above at the REPL, `typeof(x)` will be `Tuple{BigFloat,BigInt}`.
-Try first `SafeREPL.swapliterals!(nothing, nothing, nothing)` to deactivate `SafeREPL`.
+Try first `SafeREPL.swapliterals!(false)` to deactivate `SafeREPL`.
 
 _Warning_: this is alpha software and it's not recommended to use this macro in production.
 

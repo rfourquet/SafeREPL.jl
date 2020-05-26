@@ -5,7 +5,7 @@ using REPL
 function __init__()
     activate = get(ENV, "SAFEREPL_INIT", "true")
     if activate == "true"
-        swapliterals!(:big, :big, :big)
+        swapliterals!(true)
     end
 end
 
@@ -78,7 +78,7 @@ function swapliterals!(@nospecialize(F::SmallArgs), @nospecialize(I::SmallArgs),
                        @nospecialize(I128::BigArgs)=nothing,
                        @nospecialize(B::BigArgs)=nothing)
     transforms = get_transforms()
-    filter!(f -> parentmodule(f) != @__MODULE__, transforms)
+    swapliterals!(false) # remove previous settings
     if transforms === nothing
         @warn "$(@__MODULE__) could not be loaded"
     else
@@ -87,6 +87,15 @@ function swapliterals!(@nospecialize(F::SmallArgs), @nospecialize(I::SmallArgs),
     nothing
 end
 
+function swapliterals!(swap::Bool=true)
+    transforms = get_transforms()
+    if swap
+        swapliterals!(:big, :big, :big)
+    else # deactivate
+        filter!(f -> parentmodule(f) != @__MODULE__, transforms)
+    end
+    nothing
+end
 
 ## macro
 

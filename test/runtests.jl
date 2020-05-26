@@ -1,10 +1,11 @@
 using Test
 
-using BigInREPL: makebig
+using BigInREPL: swapint
 
-@testset "makebig" begin
-    @test makebig(1) == :(big(1))
+@testset "swapint" begin
+    swapbig = swapint(big)
+    @test swapbig(1) == :($big(1))
     for T in Base.BitUnsigned_types
-        @test typeof(makebig(T(1))) == T
+        @test typeof(swapbig(T(1))) == T
     end
 end

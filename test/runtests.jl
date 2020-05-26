@@ -3,7 +3,7 @@ using Test
 using SafeREPL: swapliterals
 
 @testset "swapliterals" begin
-    swapbig = swapliterals(big, BigFloat)
+    swapbig = swapliterals(BigFloat, big)
     @test swapbig(1) == :($big(1))
     @test swapbig(1.2) == :($BigFloat(1.2))
     for T in Base.BitUnsigned_types

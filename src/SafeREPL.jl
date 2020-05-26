@@ -10,7 +10,7 @@ function __init__()
 end
 
 
-function swapliterals(@nospecialize(swapint), @nospecialize(swapfloat))
+function swapliterals(@nospecialize(swapfloat), @nospecialize(swapint))
     function swapper(@nospecialize(ex))
         if ex isa Expr
             h = ex.head
@@ -43,13 +43,13 @@ function get_transforms()
     end
 end
 
-function setdefaults(@nospecialize(I), @nospecialize(F))
+function setdefaults(@nospecialize(F), @nospecialize(I))
     transforms = get_transforms()
     filter!(f -> parentmodule(f) != @__MODULE__, transforms)
     if transforms === nothing
         @warn "$(@__MODULE__) could not be loaded"
     else
-        push!(transforms, swapliterals(I, F))
+        push!(transforms, swapliterals(F, I))
     end
 end
 

@@ -25,7 +25,7 @@ using BitIntegers, SaferIntegers
     x = eval(swapbig(:1111111111111111111111111111111111111111))
     @test x isa BigInt
 
-    swap128 = swapliterals(Float64, :Int128, "@int128_str")
+    swap128 = swapliterals(:Float64, :Int128, "@int128_str")
     x = eval(swap128(1))
     @test x == 1 && x isa Int128
     x = eval(swap128(:11111111111111111111))

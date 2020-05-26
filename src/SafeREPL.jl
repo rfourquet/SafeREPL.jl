@@ -5,13 +5,15 @@ using REPL
 function __init__()
     activate = get(ENV, "SAFEREPL_INIT", "true")
     if activate == "true"
-        setdefaults(big, big, "@big_str")
+        setdefaults(:big, :big, :big)
     end
 end
 
+const SmallArgs = Union{Nothing,Symbol}
 const BigArgs = Union{Nothing,String,Symbol}
 
-function swapliterals(@nospecialize(swapfloat), @nospecialize(swapint),
+function swapliterals(@nospecialize(swapfloat::SmallArgs),
+                      @nospecialize(swapint::SmallArgs),
                       @nospecialize(swapint128::BigArgs),
                       @nospecialize(swapbig::BigArgs)=nothing)
     function swapper(@nospecialize(ex))
@@ -72,8 +74,9 @@ function get_transforms()
     end
 end
 
-function setdefaults(@nospecialize(F), @nospecialize(I),
-                     @nospecialize(I128)=nothing, @nospecialize(B)=nothing)
+function setdefaults(@nospecialize(F::SmallArgs), @nospecialize(I::SmallArgs),
+                     @nospecialize(I128::BigArgs)=nothing,
+                     @nospecialize(B::BigArgs)=nothing)
     transforms = get_transforms()
     filter!(f -> parentmodule(f) != @__MODULE__, transforms)
     if transforms === nothing

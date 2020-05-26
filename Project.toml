@@ -1,4 +1,4 @@
-name    = "BigInREPL"
+name    = "SafeREPL"
 uuid    = "5e6a0ad9-8e90-40fa-86b1-deb43b8cfda7"
 authors = ["Rafael Fourquet <fourquet.rafael@gmail.com>"]
 version = "0.1.0"

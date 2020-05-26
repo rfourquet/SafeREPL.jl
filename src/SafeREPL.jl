@@ -1,4 +1,4 @@
-module BigInREPL
+module SafeREPL
 
 using REPL
 

@@ -1,6 +1,6 @@
 using Test
 
-using BigInREPL: swapliterals
+using SafeREPL: swapliterals
 
 @testset "swapliterals" begin
     swapbig = swapliterals(big, BigFloat)

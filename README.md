@@ -156,7 +156,7 @@ the same results as with `"@big_str"`) is to call `rationalize` before
 converting to a float.
 There is an experimental option to have `SafeREPL` implicitly insert
 calls to `rationalize`, which is enabled by calling
-`floats_use_rationalize(true)`:
+`floats_use_rationalize!(true)`:
 
 ```julia
 julia> bigfloat(x) = BigFloat(rationalize(x));
@@ -166,7 +166,7 @@ julia> SafeREPL.swapliterals!(:bigfloat, nothing, nothing)
 julia> 1.2
 1.200000000000000000000000000000000000000000000000000000000000000000000000000007
 
-julia> SafeREPL.swapliterals!(); SafeREPL.floats_use_rationalize(true); 1.2
+julia> SafeREPL.swapliterals!(); SafeREPL.floats_use_rationalize!(true); 1.2
 1.200000000000000000000000000000000000000000000000000000000000000000000000000007
 
 julia> 1.20000000000001

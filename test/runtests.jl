@@ -143,27 +143,27 @@ using BitIntegers, SaferIntegers
     end
 end
 
-## playing with floats_use_rationalize()
+## playing with floats_use_rationalize!()
 
 # can't be in a @testset apparently, probably because the parsing
-# in @testset is done before floats_use_rationalize() takes effect
+# in @testset is done before floats_use_rationalize!() takes effect
 
 @swapliterals "@big_str" nothing nothing nothing begin
     @test 1.2 == big"1.2"
 end
 
-SafeREPL.floats_use_rationalize()
+SafeREPL.floats_use_rationalize!()
 @swapliterals begin
     @test 1.2 == big"1.2"
 end
 
 # try again, with explicit `true` arg, and with :BigFloat instead of :big
-SafeREPL.floats_use_rationalize(true)
+SafeREPL.floats_use_rationalize!(true)
 @swapliterals :BigFloat nothing nothing begin
     @test 1.2 == big"1.2"
 end
 
-SafeREPL.floats_use_rationalize(false)
+SafeREPL.floats_use_rationalize!(false)
 @swapliterals :BigFloat nothing nothing begin
     @test 1.2 == big"1.1999999999999999555910790149937383830547332763671875"
 end

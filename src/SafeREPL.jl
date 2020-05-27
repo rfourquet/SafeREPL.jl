@@ -12,12 +12,12 @@ end
 const FLOATS_USE_RATIONALIZE = Ref(false)
 
 """
-    floats_use_rationalize(yesno::Bool=true)
+    floats_use_rationalize!(yesno::Bool=true)
 
 If `true`, a `Float64` input is first converted to `Rational{Int}`
 via `rationalize` before being further transformed.
 """
-floats_use_rationalize(yesno::Bool=true) = FLOATS_USE_RATIONALIZE[] = yesno
+floats_use_rationalize!(yesno::Bool=true) = FLOATS_USE_RATIONALIZE[] = yesno
 
 
 const SmallArgs = Union{Nothing,Symbol}

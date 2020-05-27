@@ -1,9 +1,11 @@
-## SafeREPL
-
 [![Build Status](https://travis-ci.org/rfourquet/SafeREPL.jl.svg?branch=master)](https://travis-ci.org/rfourquet/SafeREPL.jl)
 
-The `SafeREPL` package allows to swap the meaning of default float and
-integer literals (for `Int`, `Int128` and `BigInt`).
+
+## SafeREPL
+
+The `SafeREPL` package allows to swap, in the REPL, the meaning of Julia's
+default (unannotated) float and integer literals
+(i.e. `Float64`, `Int`, `Int128` and `BigInt`).
 By default, the new defaults are `BigFloat` and `BigInt`.
 
 ```julia
@@ -16,21 +18,37 @@ julia> sqrt(2.0)
 1.414213562373095048801688724209698078569671875376948073176679737990732478462102
 ```
 
-These can be changed via `SafeREPL.swapliterals!`. The four arguments of this
-function correspond to `Float64`, `Int`, `Int128`, `BigInt`. Passing `nothing`
-means not transforming them, and a symbol is interpreted as a function name
-to be applied to the value. The last argument defaults to `nothing`.
-Finally, `swapliterals!(false)` deactivates `SafeREPL` and `swapliterals!(true)`
-or `swapliterals!()` activates the defaults (what is enabled with `using SafeREPL`,
-which is equivalent to `swapliterals(:big, :big, :big)`).
+
+### Installation
+
+This package requires Julia version at least 1.5. It is not yet registered,
+install it via:
+```
+using Pkg; pkg"add https://github.com/rfourquet/SafeREPL.jl"
+```
 
 
-### Examples
+### Custom types
+
+What literals mean is specified via `SafeREPL.swapliterals!`.
+
+The four arguments of this function correspond to
+`Float64`, `Int`, `Int128`, `BigInt`.
+Passing `nothing` means not transforming literals of this type, and
+a symbol is interpreted as the name of a function to be applied to the value.
+The last argument defaults to `nothing`.
+
+Finally, `swapliterals!(false)` deactivates `SafeREPL` and
+`swapliterals!(true)` or `swapliterals!()` activates the default setting
+(what is enabled with `using SafeREPL`, which is equivalent to
+`swapliterals(:big, :big, :big)`).
+
+#### Examples
 
 ```julia
 julia> using BitIntegers, BitFloats
 
-julia> SafeREPL.swapliterals!(:Float128, :Int256, :Int256);
+julia> SafeREPL.swapliterals!(:Float128, :Int256, :Int256)
 
 julia> log2(factorial(60))
 254.8391546883338
@@ -40,7 +58,7 @@ julia> sqrt(2.0)
 
 julia> using SaferIntegers, DoubleFloats
 
-julia> SafeREPL.swapliterals!(:DoubleFloat, :SafeInt, :SafeInt128);
+julia> SafeREPL.swapliterals!(:DoubleFloat, :SafeInt, :SafeInt128)
 
 julia> typeof(2.0)
 Double64
@@ -55,13 +73,13 @@ ERROR: OverflowError: 10000000000000000000 * 10000000000000000000000000000000000
 Stacktrace:
 [...]
 
-julia> using Nemo; SafeREPL.swapliterals!(nothing, :fmpz, :fmpz, :fmpz);
+julia> using Nemo; SafeREPL.swapliterals!(nothing, :fmpz, :fmpz, :fmpz)
 
 julia> factorial(100)
 93326215443944152681699238856266700490715968264381621468592963895217599993229915608941463976156518286253697920827223758251185210916864000000000000000000000000
 
-julia> typeof(ans)
-fmpz
+julia> typeof(ans), typeof(1.2)
+(fmpz, Float64)
 
 julia> SafeREPL.swapliterals!(false)
 
@@ -81,7 +99,7 @@ For `Int128` and `BigInt`, it's possible to pass the name of a string macro (as 
 of a symbol. In this case, the macro is used to directly interpret the number. For example:
 
 ```julia
-julia> SafeREPL.swapliterals!(nothing, nothing, "@int1024_str", "@int1024_str");
+julia> SafeREPL.swapliterals!(nothing, nothing, "@int1024_str", "@int1024_str")
 
 julia> typeof(111111111111111111111111111111111)
 Int1024
@@ -124,15 +142,6 @@ Note: if you try the above at the REPL, `typeof(x)` will be `Tuple{BigFloat,BigI
 Try first `SafeREPL.swapliterals!(false)` to deactivate `SafeREPL`.
 
 _Warning_: this is alpha software and it's not recommended to use this macro in production.
-
-
-### Installation
-
-This package requires Julia version at least 1.5. It is not yet registered,
-install it via:
-```
-using Pkg; pkg"add https://github.com/rfourquet/SafeREPL.jl"
-```
 
 
 ### Visual indicator that SafeREPL is active
@@ -226,7 +235,7 @@ Before Julia 1.5, the easiest alternative was probably to use a custom REPL mode
 and [ReplMaker.jl](https://github.com/MasonProtter/ReplMaker.jl#example-3-big-mode)
 even has an example to set this up in few lines.
 
-At least a couple of related projects have a macro similar to `@swapliterals`:
+At least a couple of packages have a macro similar to `@swapliterals`:
 * [ChangePrecision.jl](https://github.com/stevengj/ChangePrecision.jl),
   with the `@changeprecision` macro which reinterprets floating-point literals
   but also some floats-producing functions like `rand()`.

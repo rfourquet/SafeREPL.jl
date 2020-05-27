@@ -111,14 +111,16 @@ function swapliterals!(@nospecialize(F::BigArgs),
 end
 
 function swapliterals!(swap::Bool=true)
-    transforms = get_transforms()
     if swap
         swapliterals!(:big, :big, :big)
     else # deactivate
-        filter!(f -> parentmodule(f) != @__MODULE__, transforms)
+        filter!(f -> parentmodule(f) != @__MODULE__, get_transforms())
     end
     nothing
 end
+
+isactive() = any(==(@__MODULE__) ∘ parentmodule, get_transforms())
+
 
 ## macro
 

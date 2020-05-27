@@ -137,20 +137,31 @@ using Pkg; pkg"add https://github.com/rfourquet/SafeREPL.jl"
 
 ### Visual indicator that SafeREPL is active
 
-The following can be put in the "startup.jl" file to modify the color of the prompt.
-Tweak as necessary.
+The following can be put in the "startup.jl" file to modify the color of the prompt,
+or to modify the text in the prompt. Tweak as necessary.
 
 ```julia
 using REPL
 
 atreplinit() do repl
     repl.interface = REPL.setup_interface(repl)
-    old_prefix = repl.interface.modes[1].prompt_prefix
-    repl.interface.modes[1].prompt_prefix = function()
+    julia_mode = repl.interface.modes[1]
+
+    old_prefix = julia_mode.prompt_prefix
+    julia_mode.prompt_prefix = function()
         if isdefined(Main, :SafeREPL) && SafeREPL.isactive()
             Base.text_colors[:yellow]
         else
             old_prefix
+        end
+    end
+
+    old_prompt = julia_mode.prompt
+    julia_mode.prompt = function()
+        if isdefined(Main, :SafeREPL) && SafeREPL.isactive()
+            "safejulia> " # ;-)
+        else
+            old_prompt
         end
     end
 end

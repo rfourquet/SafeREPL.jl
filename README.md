@@ -23,6 +23,10 @@ to be applied to the value. The last argument defaults to `nothing`.
 Finally, `swapliterals!(false)` deactivates `SafeREPL` and `swapliterals!(true)`
 or `swapliterals!()` activates the defaults (what is enabled with `using SafeREPL`,
 which is equivalent to `swapliterals(:big, :big, :big)`).
+
+
+### Examples
+
 ```julia
 julia> using BitIntegers, BitFloats
 
@@ -70,6 +74,7 @@ julia> typeof(1), typeof(1.0)
 (BigInt, BigFloat)
 ```
 
+
 ### String macros
 
 For `Int128` and `BigInt`, it's possible to pass the name of a string macro (as a `String`) instead
@@ -99,6 +104,7 @@ julia> 1.2 == big"1.2"
 true
 ```
 
+
 ### How to use in source code?
 
 Via the `@swapliterals` macro, with the same arguments as the `swapliterals!` function:
@@ -125,10 +131,16 @@ install it via:
 using Pkg; pkg"add https://github.com/rfourquet/SafeREPL.jl"
 ```
 
+
 ### Caveats
 
 * This package was not tested on 32-bits architectures, help will be needed to support them.
-* float literals are stored as `Float64` in the AST, meaning that information can be lost:
+
+* Using new number types by default in the REPL might reveal many missing methods
+  for these types and render the REPL less usable than ideal.
+  Time for opening ticket/issues in the corresponding projects :)
+
+* float literals are stored as `Float64` in the Julia AST, meaning that information can be lost:
 
 ```julia
 julia> using SafeREPL; 1.2 # this is equivalent to `big(1.2)`
@@ -138,10 +150,13 @@ julia> big"1.2"
 1.200000000000000000000000000000000000000000000000000000000000000000000000000007
 ```
 
-As said earlier, one can pass `"@big_str"` for the `Float64` converter to try to
-alleviate this problem. Another alternative (which does _not_ always produce the
-same results) is to call `rationalize`, which is being called implicitly
-when an experimental option is activated via a call to `floats_use_rationalize()`:
+As said earlier, one can pass `"@big_str"` for the `Float64` converter to try
+to mitigate this problem. Another alternative (which does _not_ always produce
+the same results as with `"@big_str"`) is to call `rationalize` before
+converting to a float.
+There is an experimental option to have `SafeREPL` implicitly insert
+calls to `rationalize`, which is enabled by calling
+`floats_use_rationalize(true)`:
 
 ```julia
 julia> bigfloat(x) = BigFloat(rationalize(x));
@@ -151,21 +166,23 @@ julia> SafeREPL.swapliterals!(:bigfloat, nothing, nothing)
 julia> 1.2
 1.200000000000000000000000000000000000000000000000000000000000000000000000000007
 
-julia> SafeREPL.swapliterals!(); SafeREPL.floats_use_rationalize(); 1.2
+julia> SafeREPL.swapliterals!(); SafeREPL.floats_use_rationalize(true); 1.2
 1.200000000000000000000000000000000000000000000000000000000000000000000000000007
 
 julia> 1.20000000000001
 1.200000000000010169642905566151645987816694259698096594761182517957654980952429
 
-julia> SafeREPL.swapliterals!("@big_str", nothing, nothing)
+julia> SafeREPL.swapliterals!("@big_str", nothing, nothing) # rationalize not used
 
 julia> 1.20000000000001
 1.200000000000010000000000000000000000000000000000000000000000000000000000000006
 ```
 
-* Using different number types as default in the REPL might reveal many missing methods
-  for these types and render the REPL less usable than ideal.
-  Time for opening ticket/issues in the corresponding projects :)
+Note that `bigfloat` could not be defined on the fly like in
+`swapliterals!(x -> BigFloat(rationalize(x)), nothing, nothing)`,
+because `swapliterals!` requires symbol names. Passing a function
+is currently reserved for possible future features.
+
 
 ### Alternatives
 
@@ -175,7 +192,7 @@ even has an example to set this up in few lines.
 
 At least a couple of related projects have a macro similar to `@swapliterals`:
 * [ChangePrecision.jl](https://github.com/stevengj/ChangePrecision.jl),
-  with the `@changeprecision` macro which reinterpret floating-point literals
+  with the `@changeprecision` macro which reinterprets floating-point literals
   but also some floats-producing functions like `rand()`.
 * [SaferIntegers.jl](https://github.com/JeffreySarnoff/SaferIntegers.jl),
   with the `@saferintegers` macro which wraps integers using `SaferIntegers`

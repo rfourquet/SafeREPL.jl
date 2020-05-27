@@ -172,3 +172,11 @@ julia> 1.20000000000001
 Before Julia 1.5, the easiest alternative was probably to use a custom REPL mode,
 and [ReplMaker.jl](https://github.com/MasonProtter/ReplMaker.jl#example-3-big-mode)
 even has an example to set this up in few lines.
+
+At least a couple of related projects have a macro similar to `@swapliterals`:
+* [ChangePrecision.jl](https://github.com/stevengj/ChangePrecision.jl),
+  with the `@changeprecision` macro which reinterpret floating-point literals
+  but also some floats-producing functions like `rand()`.
+* [SaferIntegers.jl](https://github.com/JeffreySarnoff/SaferIntegers.jl),
+  with the `@saferintegers` macro which wraps integers using `SaferIntegers`
+  types.

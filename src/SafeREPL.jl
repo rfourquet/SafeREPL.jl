@@ -76,7 +76,7 @@ end
 
 function swapliterals!(@nospecialize(F::SmallArgs),
                        @nospecialize(I::SmallArgs),
-                       @nospecialize(I128::BigArgs)=nothing,
+                       @nospecialize(I128::BigArgs),
                        @nospecialize(B::BigArgs)=nothing,
                        firsttime=false)
     # firsttime: when loading, avoiding filtering shaves off few tens of ms

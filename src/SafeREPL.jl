@@ -117,7 +117,7 @@ transform_arg(@nospecialize(x)) =
         throw(ArgumentError("invalid argument"))
     end
 
-function swapliterals_macro(F, I, I128, B, ex)
+function macro_swapliterals(F, I, I128, B, ex)
     F = transform_arg(F)
     I = transform_arg(I)
     I128 = transform_arg(I128)
@@ -127,11 +127,11 @@ end
 
 macro swapliterals(args...)
     if length(args) == 1
-        swapliterals_macro(:(:big), :(:big), :(:big), :nothing, esc(args[1]))
+        macro_swapliterals(:(:big), :(:big), :(:big), :nothing, esc(args[1]))
     elseif length(args) == 4
-        swapliterals_macro(args[1], args[2], args[3], :nothing, esc(args[4]))
+        macro_swapliterals(args[1], args[2], args[3], :nothing, esc(args[4]))
     elseif length(args) == 5
-        swapliterals_macro(args[1:4]..., esc(args[5]))
+        macro_swapliterals(args[1:4]..., esc(args[5]))
     else
         throw(ArgumentError("wrong number of arguments"))
     end

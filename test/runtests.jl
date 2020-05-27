@@ -140,4 +140,9 @@ using BitIntegers, SaferIntegers
         x = 1111111111111111111111111111111111111111
         @test x isa BigInt
     end
+
+    # experimental
+    @swapliterals "@big_str" nothing nothing nothing begin
+        @test 1.2 == big"1.2"
+    end
 end

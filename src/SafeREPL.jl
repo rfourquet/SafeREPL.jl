@@ -12,13 +12,17 @@ end
 const SmallArgs = Union{Nothing,Symbol}
 const BigArgs = Union{Nothing,String,Symbol}
 
-function literalswapper(@nospecialize(swapfloat::SmallArgs),
-                      @nospecialize(swapint::SmallArgs),
-                      @nospecialize(swapint128::BigArgs),
-                      @nospecialize(swapbig::BigArgs)=nothing)
+function literalswapper(@nospecialize(swapfloat::BigArgs),
+                        @nospecialize(swapint::SmallArgs),
+                        @nospecialize(swapint128::BigArgs),
+                        @nospecialize(swapbig::BigArgs)=nothing)
     function swapper(@nospecialize(ex))
         if swapfloat !== nothing && ex isa Float64
-            :($swapfloat($ex))
+            if swapfloat isa String
+                Expr(:macrocall, Symbol(swapfloat), nothing, string(ex))
+            else
+                :($swapfloat($ex))
+            end
         elseif swapint !== nothing && ex isa Int
             :($swapint($ex))
         elseif swapint128 !== nothing && ex isa Expr &&
@@ -74,7 +78,7 @@ function get_transforms()
     end
 end
 
-function swapliterals!(@nospecialize(F::SmallArgs),
+function swapliterals!(@nospecialize(F::BigArgs),
                        @nospecialize(I::SmallArgs),
                        @nospecialize(I128::BigArgs),
                        @nospecialize(B::BigArgs)=nothing,

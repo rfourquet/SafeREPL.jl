@@ -9,6 +9,17 @@ function __init__()
     end
 end
 
+const FLOATS_USE_RATIONALIZE = Ref(false)
+
+"""
+    floats_use_rationalize(yesno::Bool=true)
+
+If `true`, a `Float64` input is first converted to `Rational{Int}`
+via `rationalize` before being further transformed.
+"""
+floats_use_rationalize(yesno::Bool=true) = FLOATS_USE_RATIONALIZE[] = yesno
+
+
 const SmallArgs = Union{Nothing,Symbol}
 const BigArgs = Union{Nothing,String,Symbol}
 
@@ -20,6 +31,11 @@ function literalswapper(@nospecialize(swapfloat::BigArgs),
         if swapfloat !== nothing && ex isa Float64
             if swapfloat isa String
                 Expr(:macrocall, Symbol(swapfloat), nothing, string(ex))
+            elseif FLOATS_USE_RATIONALIZE[]
+                if swapfloat == :big # big(1//2) doesn't return BigFloat
+                    swapfloat = :BigFloat
+                end
+                :($swapfloat(rationalize($ex)))
             else
                 :($swapfloat($ex))
             end

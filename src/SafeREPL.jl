@@ -94,6 +94,19 @@ function get_transforms()
     end
 end
 
+"""
+    SafeREPL.swapliterals!(F, I, I128, B)
+
+Specify transformations for literals: `F` for literals of type `Float64`,
+`I` for `Int`, `I128` for `Int128` and `B` for `BigInt`.
+
+A transformation can be
+* a `Symbol`, to refer to a function, e.g. `:big`;
+* `nothing` to not transform literals of this type;
+* a `String` specifying the name of a string macro, e.g. `"@big_str"`,
+  which will be applied to the input. Available only for
+  `I128` and `B`, and experimentally for `F`.
+"""
 function swapliterals!(@nospecialize(F::BigArgs),
                        @nospecialize(I::SmallArgs),
                        @nospecialize(I128::BigArgs),

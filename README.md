@@ -92,7 +92,7 @@ ERROR: LoadError: OverflowError: overflow parsing "1234..."
 ```
 
 As an experimental feature, when a string macro is passed to interpret `Float64`,
-the input is then first converted to a `String` and then passed to the macro:
+the input is then first converted to a `String` which is passed to the macro:
 
 ```julia
 julia> SafeREPL.swapliterals!("@big_str", nothing, nothing)
@@ -102,6 +102,9 @@ julia> 1.2
 
 julia> 1.2 == big"1.2"
 true
+
+julia> 1.1999999999999999 == big"1.1999999999999999"
+false
 ```
 
 

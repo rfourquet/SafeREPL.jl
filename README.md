@@ -86,6 +86,19 @@ ERROR: LoadError: OverflowError: overflow parsing "1234..."
 [...]
 ```
 
+As an experimental feature, when a string macro is passed to interpret `Float64`,
+the input is then first converted to a `String` and then passed to the macro:
+
+```julia
+julia> SafeREPL.swapliterals!("@big_str", nothing, nothing)
+
+julia> 1.2
+1.200000000000000000000000000000000000000000000000000000000000000000000000000007
+
+julia> 1.2 == big"1.2"
+true
+```
+
 ### How to use in source code?
 
 Via the `@swapliterals` macro, with the same arguments as the `swapliterals!` function:
@@ -124,6 +137,32 @@ julia> using SafeREPL; 1.2 # this is equivalent to `big(1.2)`
 julia> big"1.2"
 1.200000000000000000000000000000000000000000000000000000000000000000000000000007
 ```
+
+As said earlier, one can pass `"@big_str"` for the `Float64` converter to try to
+alleviate this problem. Another alternative (which does _not_ always produce the
+same results) is to call `rationalize`, which is being called implicitly
+when an experimental option is activated via a call to `floats_use_rationalize()`:
+
+```julia
+julia> bigfloat(x) = BigFloat(rationalize(x));
+
+julia> SafeREPL.swapliterals!(:bigfloat, nothing, nothing)
+
+julia> 1.2
+1.200000000000000000000000000000000000000000000000000000000000000000000000000007
+
+julia> SafeREPL.swapliterals!(); SafeREPL.floats_use_rationalize(); 1.2
+1.200000000000000000000000000000000000000000000000000000000000000000000000000007
+
+julia> 1.20000000000001
+1.200000000000010169642905566151645987816694259698096594761182517957654980952429
+
+julia> SafeREPL.swapliterals!("@big_str", nothing, nothing)
+
+julia> 1.20000000000001
+1.200000000000010000000000000000000000000000000000000000000000000000000000000006
+```
+
 * Using different number types as default in the REPL might reveal many missing methods
   for these types and render the REPL less usable than ideal.
   Time for opening ticket/issues in the corresponding projects :)

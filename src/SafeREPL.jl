@@ -66,9 +66,9 @@ end
 function get_transforms()
     if isdefined(Base, :active_repl_backend) &&
         isdefined(Base.active_repl_backend, :ast_transforms)
-        Base.active_repl_backend.ast_transforms
+        Base.active_repl_backend.ast_transforms::Vector{Any}
     elseif isdefined(REPL, :repl_ast_transforms)
-        REPL.repl_ast_transforms
+        REPL.repl_ast_transforms::Vector{Any}
     else
         nothing
     end

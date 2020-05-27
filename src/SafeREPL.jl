@@ -27,9 +27,11 @@ function literalswapper(@nospecialize(swapfloat::BigArgs),
                         @nospecialize(swapint::SmallArgs),
                         @nospecialize(swapint128::BigArgs),
                         @nospecialize(swapbig::BigArgs)=nothing)
-    function swapper(@nospecialize(ex))
-        if swapfloat !== nothing && ex isa Float64
-            if swapfloat isa String
+    function swapper(@nospecialize(ex), quoted=false)
+        if ex isa Float64
+            if quoted || swapfloat === nothing
+                ex
+            elseif swapfloat isa String
                 Expr(:macrocall, Symbol(swapfloat), nothing, string(ex))
             elseif FLOATS_USE_RATIONALIZE[]
                 if swapfloat == :big # big(1//2) doesn't return BigFloat
@@ -39,46 +41,68 @@ function literalswapper(@nospecialize(swapfloat::BigArgs),
             else
                 :($swapfloat($ex))
             end
-        elseif swapint !== nothing && ex isa Int
-            :($swapint($ex))
-        elseif swapint128 !== nothing && ex isa Expr &&
-            ex.head == :macrocall && ex.args[1] isa GlobalRef &&
-            ex.args[1].name == Symbol("@int128_str")
-
-            if swapint128 == :big
-                swapint128 = "@big_str"
-            end
-            if swapint128 isa String
-                ex.args[1] = Symbol(swapint128)
-                ex
-            else # Symbol
-                :($swapint128($ex))
-            end
-        elseif swapbig !== nothing && ex isa Expr &&
-            ex.head == :macrocall && ex.args[1] isa GlobalRef &&
-            ex.args[1].name == Symbol("@big_str")
-
-            if swapbig == :big
-                swapbig = "@big_str"
-            end
-            if swapbig isa String
-                ex.args[1] = Symbol(swapbig)
-                ex
-            else # Symbol
-                :($swapbig($ex))
-            end
-        elseif ex isa Expr
-            h = ex.head
-            # copied from REPL.softscope
-            if h in (:meta, :import, :using, :export, :module, :error, :incomplete, :thunk)
+        elseif ex isa Int
+            if quoted || swapint === nothing
                 ex
             else
-                ex′ = Expr(h)
-                map!(swapper, resize!(ex′.args, length(ex.args)), ex.args)
-                ex′
+                :($swapint($ex))
+            end
+        elseif ex isa Expr && ex.head == :macrocall &&
+            ex.args[1] isa GlobalRef &&
+            ex.args[1].name == Symbol("@int128_str")
+
+            if quoted || swapint128 === nothing
+                ex
+            else
+                if swapint128 == :big
+                    swapint128 = "@big_str"
+                end
+                if swapint128 isa String
+                    ex.args[1] = Symbol(swapint128)
+                    ex
+                else # Symbol
+                    :($swapint128($ex))
+                end
+            end
+        elseif ex isa Expr && ex.head == :macrocall &&
+            ex.args[1] isa GlobalRef &&
+            ex.args[1].name == Symbol("@big_str")
+
+            if quoted || swapbig === nothing
+                ex
+            else
+                if swapbig == :big
+                    swapbig = "@big_str"
+                end
+                if swapbig isa String
+                    ex.args[1] = Symbol(swapbig)
+                    ex
+                else # Symbol
+                    :($swapbig($ex))
+                end
             end
         else
-            ex
+            ex =
+                if ex isa Expr
+                    h = ex.head
+                    # copied from REPL.softscope
+                    if h in (:meta, :import, :using, :export, :module, :error, :incomplete, :thunk)
+                        ex
+                    elseif Meta.isexpr(ex, :$, 1)
+                        swapper(ex.args[1], true)
+                    else
+                        ex′ = Expr(h)
+                        map!(swapper, resize!(ex′.args, length(ex.args)), ex.args)
+                        ex′
+                    end
+                else
+                    ex
+                end
+            if quoted
+                Expr(:$, ex)
+            else
+                ex
+            end
         end
     end
 end

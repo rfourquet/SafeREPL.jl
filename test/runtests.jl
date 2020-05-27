@@ -14,6 +14,8 @@ using BitIntegers, SaferIntegers
         @test 1 isa BigInt
         @test 1.2 isa BigFloat
         @test 1.0 == Float64(1.0)
+        @test $1 isa Int
+        @test $1.2 isa Float64
     end
 
     # TODO: these tests in loop are dubious
@@ -42,6 +44,10 @@ using BitIntegers, SaferIntegers
         @test x == big"11111111111111111111" && x isa BigInt
         x = 1111111111111111111111111111111111111111
         @test x isa BigInt
+
+        @test $1.0 isa Float64
+        @test $11111111111111111111 isa Int128
+        @test $1111111111111111111111111111111111111111 isa BigInt
     end
 
     swap128 = literalswapper(:Float64, :Int128, "@int128_str")
@@ -123,10 +129,10 @@ using BitIntegers, SaferIntegers
     @test x isa Int1024
 
     @swapliterals nothing nothing :Int1024 :Int1024 begin
-        x = 11111111111111111111
-        @test x isa Int1024
-        x = 1111111111111111111111111111111111111111
-        @test x isa Int1024
+        @test 11111111111111111111 isa Int1024
+        @test 1111111111111111111111111111111111111111 isa Int1024
+        @test $11111111111111111111 isa Int128
+        @test $1111111111111111111111111111111111111111 isa BigInt
     end
 
     swapbig = literalswapper(nothing, nothing, :big, :big)

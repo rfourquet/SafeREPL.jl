@@ -7,6 +7,7 @@ The `SafeREPL` package allows to swap, in the REPL, the meaning of Julia's
 default (unannotated) float and integer literals
 (i.e. `Float64`, `Int`, `Int128` and `BigInt`).
 By default, the new defaults are `BigFloat` and `BigInt`.
+A literal prefixed with `$` is left unchanged.
 
 ```julia
 julia> using SafeREPL
@@ -16,6 +17,9 @@ julia> 2^200
 
 julia> sqrt(2.0)
 1.414213562373095048801688724209698078569671875376948073176679737990732478462102
+
+julia> typeof($2)
+Int64
 ```
 
 
@@ -80,6 +84,13 @@ julia> factorial(100)
 
 julia> typeof(ans), typeof(1.2)
 (fmpz, Float64)
+
+julia> [1, 2, 3][1] # fmpz is currently not <: Integer ...
+ERROR: ArgumentError: invalid index: 1 of type fmpz
+[...]
+
+julia> [1, 2, 3][$1] # ... so quote array indices
+1
 
 julia> SafeREPL.swapliterals!(false)
 
@@ -183,7 +194,8 @@ end
 
 * Using new number types by default in the REPL might reveal many missing methods
   for these types and render the REPL less usable than ideal.
-  Time for opening ticket/issues in the corresponding projects :)
+  Good opportunity for opening ticket/issues in the corresponding projects :)
+  In the meantime, this can be mitigated by the use of `$`.
 
 * float literals are stored as `Float64` in the Julia AST, meaning that information can be lost:
 

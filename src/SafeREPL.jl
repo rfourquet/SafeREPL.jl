@@ -31,9 +31,13 @@ end
 function literalswapper(; swaps...)
     @nospecialize
 
-    function swapper(@nospecialize(ex::Union{Float64,Int,String,Char}), quoted=false)
+    function swapper(@nospecialize(ex::Union{Float64,Int,String,Char,
+                                             Base.BitUnsigned64}), quoted=false)
         ts = ex isa Int ? :Int : Symbol(typeof(ex))
         swap = get(swaps, ts, nothing)
+        if ex isa UInt && swap === nothing
+            swap = get(swaps, :UInt, nothing)
+        end
 
         if quoted || swap === nothing
             ex
@@ -53,10 +57,12 @@ function literalswapper(; swaps...)
         if ex isa Expr && ex.head == :macrocall &&
             ex.args[1] isa GlobalRef &&
             ex.args[1].name ∈ (Symbol("@int128_str"),
+                               Symbol("@uint128_str"),
                                Symbol("@big_str"))
 
             swap = get(swaps,
-                       ex.args[1].name == Symbol("@big_str") ? :BigInt : :Int128,
+                       ex.args[1].name == Symbol("@big_str") ? :BigInt :
+                       ex.args[1].name == Symbol("@int128_str") ? :Int128 : :UInt128,
                        nothing)
 
             if quoted || swap === nothing

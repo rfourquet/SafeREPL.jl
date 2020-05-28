@@ -172,6 +172,23 @@ using BitIntegers, SaferIntegers
     @test eval(kwswapper(:11111111111111111111)) isa Int128
     @test eval(kwswapper(:1111111111111111111111111111111111111111)) isa BigInt
 
+    # unsigned
+    @swapliterals UInt8=:Int UInt16=:Int UInt32=:Int UInt64=:Int UInt128=:Int128 begin
+        @test 0x1 isa Int
+        @test 0x0001 isa Int
+        @test $0x0001 isa UInt16
+        @test 0x00000001 isa Int
+        @test $0x00000001 isa UInt32
+        @test :0x00000001 isa UInt32
+        @test 0x0000000000000001 isa Int
+        @test :0x0000000000000001 isa UInt64
+        @test 0x00000000000000000000000000000001 isa Int128
+        @test $0x00000000000000000000000000000001 isa UInt128
+    end
+    @swapliterals UInt128="@int128_str" begin
+        @test 0x00000000000000000000000000000001 isa Int128
+        @test $0x00000000000000000000000000000001 isa UInt128
+    end
 
     # strings & chars
     @swapliterals Char=:string String = "@r_str" begin

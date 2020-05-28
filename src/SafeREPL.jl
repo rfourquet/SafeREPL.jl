@@ -23,23 +23,18 @@ floats_use_rationalize!(yesno::Bool=true) = FLOATS_USE_RATIONALIZE[] = yesno
 const SmallArgs = Union{Nothing,Symbol}
 const BigArgs = Union{Nothing,String,Symbol}
 
-function literalswapper(swapfloat::BigArgs,
-                        swapint::SmallArgs,
-                        swapint128::BigArgs,
-                        swapbig::BigArgs=nothing;
-                        swapstr::BigArgs=nothing)
+function literalswapper(Float64, Int, Int128, BigInt=nothing)
+    @nospecialize
+    literalswapper(; Float64, Int, Int128, BigInt)
+end
 
+function literalswapper(; swaps...)
     @nospecialize
 
-    swapof = (Float64 = swapfloat,
-              Int32 = swapint,
-              Int64 = swapint,
-              Int128 = swapint128,
-              BigInt = swapbig,
-              String = swapstr)
-
     function swapper(@nospecialize(ex::Union{Float64,Int,String}), quoted=false)
-        swap = swapof[Symbol(typeof(ex))]
+        ts = ex isa Int ? :Int : Symbol(typeof(ex))
+        swap = swaps[ts]
+
         if quoted || swap === nothing
             ex
         elseif !(ex isa Int) && swap isa String
@@ -60,9 +55,9 @@ function literalswapper(swapfloat::BigArgs,
             ex.args[1].name ∈ (Symbol("@int128_str"),
                                Symbol("@big_str"))
 
-            swap = swapof[ex.args[1].name == Symbol("@big_str") ?
-                          :BigInt :
-                          :Int128]
+            swap = swaps[ex.args[1].name == Symbol("@big_str") ?
+                         :BigInt :
+                         :Int128]
 
             if quoted || swap === nothing
                 ex
@@ -135,18 +130,26 @@ function swapliterals!(F::BigArgs,
                        firsttime::Bool=false)
     @nospecialize
 
+    swapliterals!(; Float64=F, Int=I, Int128=I128, BigInt=B, String=S,
+                  firsttime
+                  )
+end
+
+function swapliterals!(; firsttime=false, swaps...)
+    @nospecialize
+
     # firsttime: when loading, avoiding filtering shaves off few tens of ms
     firsttime || swapliterals!(false) # remove previous settings
     transforms = get_transforms()
     if transforms === nothing
         @warn "$(@__MODULE__) could not be loaded"
     else
-        push!(transforms, literalswapper(F, I, I128, B, swapstr=S))
+        push!(transforms, literalswapper(; swaps...))
     end
     nothing
 end
 
-function swapliterals!(swap::Bool=true)
+function swapliterals!(swap::Bool)
     if swap
         swapliterals!(:big, :big, :big)
     else # deactivate
@@ -171,24 +174,21 @@ transform_arg(@nospecialize(x)) =
         throw(ArgumentError("invalid argument"))
     end
 
-function macro_swapliterals(F, I, I128, B, S, ex)
-    F = transform_arg(F)
-    I = transform_arg(I)
-    I128 = transform_arg(I128)
-    B = transform_arg(B)
-    S = transform_arg(S)
-    literalswapper(F, I, I128, B; swapstr=S)(ex)
+function macro_swapliterals(ex, swaps...)
+    swaps = map(transform_arg, swaps)
+    n = NamedTuple{(:Float64, :Int, :Int128, :BigInt, :String)}(swaps)
+    literalswapper(; n...)
 end
 
 macro swapliterals(args...)
     if length(args) == 1
-        macro_swapliterals(:(:big), :(:big), :(:big), :nothing, :nothing, esc(args[1]))
+        macro_swapliterals(esc(args[1]), :(:big), :(:big), :(:big), :nothing, :nothing)
     elseif length(args) == 4
-        macro_swapliterals(args[1:3]..., :nothing, :nothing, esc(args[4]))
+        macro_swapliterals(esc(args[4]), args[1:3]..., :nothing, :nothing)
     elseif length(args) == 5
-        macro_swapliterals(args[1:4]..., :nothing, esc(args[5]))
+        macro_swapliterals(esc(args[5]), args[1:4]..., :nothing)
     elseif length(args) == 6
-        macro_swapliterals(args[1:5]..., esc(args[6]))
+        macro_swapliterals(esc(args[6]), args[1:5]...)
     else
         throw(ArgumentError("wrong number of arguments"))
     end

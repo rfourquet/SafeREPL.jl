@@ -5,7 +5,10 @@ using REPL
 function __init__()
     activate = get(ENV, "SAFEREPL_INIT", "true")
     if activate == "true"
-        swapliterals!(:big, :big, :big, nothing, firsttime=true)
+        swapliterals!(Float64   = :big,
+                      Int       = :big,
+                      Int128    = :big,
+                      firsttime = true)
     end
 end
 
@@ -33,7 +36,7 @@ function literalswapper(; swaps...)
 
     function swapper(@nospecialize(ex::Union{Float64,Int,String}), quoted=false)
         ts = ex isa Int ? :Int : Symbol(typeof(ex))
-        swap = swaps[ts]
+        swap = get(swaps, ts, nothing)
 
         if quoted || swap === nothing
             ex
@@ -55,9 +58,9 @@ function literalswapper(; swaps...)
             ex.args[1].name ∈ (Symbol("@int128_str"),
                                Symbol("@big_str"))
 
-            swap = swaps[ex.args[1].name == Symbol("@big_str") ?
-                         :BigInt :
-                         :Int128]
+            swap = get(swaps,
+                       ex.args[1].name == Symbol("@big_str") ? :BigInt : :Int128,
+                       nothing)
 
             if quoted || swap === nothing
                 ex
@@ -110,29 +113,24 @@ function get_transforms()
 end
 
 """
-    SafeREPL.swapliterals!(F, I, I128, B)
+    SafeREPL.swapliterals!(Float64, Int, Int128, BigInt=nothing)
 
-Specify transformations for literals: `F` for literals of type `Float64`,
-`I` for `Int`, `I128` for `Int128` and `B` for `BigInt`.
+Specify transformations for literals:
+argument `Float64` corresponds to literals of type `Float64`, etcetera.
 
 A transformation can be
 * a `Symbol`, to refer to a function, e.g. `:big`;
 * `nothing` to not transform literals of this type;
 * a `String` specifying the name of a string macro, e.g. `"@big_str"`,
   which will be applied to the input. Available only for
-  `I128` and `B`, and experimentally for `F`.
+  `Int128` and `BigInt`, and experimentally for `Float64`.
 """
-function swapliterals!(F::BigArgs,
-                       I::SmallArgs,
-                       I128::BigArgs,
-                       B::BigArgs=nothing;
-                       S::BigArgs=nothing,
-                       firsttime::Bool=false)
+function swapliterals!(Float64::BigArgs,
+                       Int::SmallArgs,
+                       Int128::BigArgs,
+                       BigInt::BigArgs=nothing)
     @nospecialize
-
-    swapliterals!(; Float64=F, Int=I, Int128=I128, BigInt=B, String=S,
-                  firsttime
-                  )
+    swapliterals!(; Float64, Int, Int128, BigInt)
 end
 
 function swapliterals!(; firsttime=false, swaps...)

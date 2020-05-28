@@ -148,6 +148,14 @@ using BitIntegers, SaferIntegers
         @test x isa BigInt
     end
 
+    # kwargs
+    kwswapper = literalswapper(Int=:big)
+    @test eval(kwswapper(1.2)) isa Float64
+    @test eval(kwswapper(1)) isa BigInt
+    @test eval(kwswapper(:11111111111111111111)) isa Int128
+    @test eval(kwswapper(:1111111111111111111111111111111111111111)) isa BigInt
+
+
     # strings
     @swapliterals nothing nothing nothing nothing "@r_str" begin
         @test "123" isa Regex

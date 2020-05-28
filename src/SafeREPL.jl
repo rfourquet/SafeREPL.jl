@@ -136,7 +136,7 @@ function swapliterals!(Float64::BigArgs,
     swapliterals!(; Float64, Int, Int128, BigInt)
 end
 
-const defaultswaps = (Float64   = :big,
+const defaultswaps = (Float64   = "@big_str",
                       Int       = :big,
                       Int128    = :big,
                       firsttime = true)

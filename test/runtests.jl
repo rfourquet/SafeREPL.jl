@@ -13,6 +13,7 @@ using BitIntegers, SaferIntegers
         @test 1 == Int(1)
         @test 1 isa BigInt
         @test 1.2 isa BigFloat
+        @test 1.2 == big"1.1999999999999999555910790149937383830547332763671875"
         @test 1.0 == Float64(1.0)
         @test $1 isa Int
         @test $1.2 isa Float64
@@ -21,16 +22,19 @@ using BitIntegers, SaferIntegers
     # next three blocs should be equivalent
     @swapliterals begin
         @test 1.2 isa BigFloat
+        @test 1.2 == big"1.2"
         @test 1 isa BigInt
         @test 11111111111111111111 isa BigInt
     end
-    @swapliterals :big :big :big begin
+    @swapliterals "@big_str" :big :big begin
         @test 1.2 isa BigFloat
+        @test 1.2 == big"1.2"
         @test 1 isa BigInt
         @test 11111111111111111111 isa BigInt
     end
-    @swapliterals Float64=:big Int=:big Int128=:big begin
+    @swapliterals Float64="@big_str" Int=:big Int128=:big begin
         @test 1.2 isa BigFloat
+        @test 1.2 == big"1.2"
         @test 1 isa BigInt
         @test 11111111111111111111 isa BigInt
     end

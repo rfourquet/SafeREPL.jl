@@ -138,8 +138,7 @@ end
 
 const defaultswaps = (Float64   = "@big_str",
                       Int       = :big,
-                      Int128    = :big,
-                      firsttime = true)
+                      Int128    = :big)
 
 function swapliterals!(; firsttime=false, swaps...)
     @nospecialize

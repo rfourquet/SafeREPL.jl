@@ -23,12 +23,13 @@ floats_use_rationalize!(yesno::Bool=true) = FLOATS_USE_RATIONALIZE[] = yesno
 const SmallArgs = Union{Nothing,Symbol}
 const BigArgs = Union{Nothing,String,Symbol}
 
-function literalswapper(@nospecialize(swapfloat::BigArgs),
-                        @nospecialize(swapint::SmallArgs),
-                        @nospecialize(swapint128::BigArgs),
-                        @nospecialize(swapbig::BigArgs=nothing);
+function literalswapper(swapfloat::BigArgs,
+                        swapint::SmallArgs,
+                        swapint128::BigArgs,
+                        swapbig::BigArgs=nothing;
                         swapstr::BigArgs=nothing)
 
+    @nospecialize
     function swapper(@nospecialize(ex), quoted=false)
         if ex isa Float64
             if quoted || swapfloat === nothing
@@ -141,12 +142,13 @@ A transformation can be
   which will be applied to the input. Available only for
   `I128` and `B`, and experimentally for `F`.
 """
-function swapliterals!(@nospecialize(F::BigArgs),
-                       @nospecialize(I::SmallArgs),
-                       @nospecialize(I128::BigArgs),
-                       @nospecialize(B::BigArgs)=nothing;
+function swapliterals!(F::BigArgs,
+                       I::SmallArgs,
+                       I128::BigArgs,
+                       B::BigArgs=nothing;
                        S::BigArgs=nothing,
                        firsttime::Bool=false)
+    @nospecialize
 
     # firsttime: when loading, avoiding filtering shaves off few tens of ms
     firsttime || swapliterals!(false) # remove previous settings

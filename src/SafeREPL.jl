@@ -5,7 +5,7 @@ using REPL
 function __init__()
     activate = get(ENV, "SAFEREPL_INIT", "true")
     if activate == "true"
-        swapliterals!(:big, :big, :big, nothing, true)
+        swapliterals!(:big, :big, :big, nothing, firsttime=true)
     end
 end
 
@@ -26,7 +26,9 @@ const BigArgs = Union{Nothing,String,Symbol}
 function literalswapper(@nospecialize(swapfloat::BigArgs),
                         @nospecialize(swapint::SmallArgs),
                         @nospecialize(swapint128::BigArgs),
-                        @nospecialize(swapbig::BigArgs)=nothing)
+                        @nospecialize(swapbig::BigArgs=nothing);
+                        swapstr::BigArgs=nothing)
+
     function swapper(@nospecialize(ex), quoted=false)
         if ex isa Float64
             if quoted || swapfloat === nothing
@@ -81,6 +83,14 @@ function literalswapper(@nospecialize(swapfloat::BigArgs),
                     :($swapbig($ex))
                 end
             end
+        elseif ex isa String
+            if quoted || swapstr === nothing
+                ex
+            elseif swapstr isa String
+                Expr(:macrocall, Symbol(swapstr), nothing, ex)
+            else
+                :($swapstr($ex))
+            end
         else
             ex =
                 if ex isa Expr
@@ -134,15 +144,17 @@ A transformation can be
 function swapliterals!(@nospecialize(F::BigArgs),
                        @nospecialize(I::SmallArgs),
                        @nospecialize(I128::BigArgs),
-                       @nospecialize(B::BigArgs)=nothing,
-                       firsttime=false)
+                       @nospecialize(B::BigArgs)=nothing;
+                       S::BigArgs=nothing,
+                       firsttime::Bool=false)
+
     # firsttime: when loading, avoiding filtering shaves off few tens of ms
     firsttime || swapliterals!(false) # remove previous settings
     transforms = get_transforms()
     if transforms === nothing
         @warn "$(@__MODULE__) could not be loaded"
     else
-        push!(transforms, literalswapper(F, I, I128, B))
+        push!(transforms, literalswapper(F, I, I128, B, swapstr=S))
     end
     nothing
 end
@@ -172,21 +184,24 @@ transform_arg(@nospecialize(x)) =
         throw(ArgumentError("invalid argument"))
     end
 
-function macro_swapliterals(F, I, I128, B, ex)
+function macro_swapliterals(F, I, I128, B, S, ex)
     F = transform_arg(F)
     I = transform_arg(I)
     I128 = transform_arg(I128)
     B = transform_arg(B)
-    literalswapper(F, I, I128, B)(ex)
+    S = transform_arg(S)
+    literalswapper(F, I, I128, B; swapstr=S)(ex)
 end
 
 macro swapliterals(args...)
     if length(args) == 1
-        macro_swapliterals(:(:big), :(:big), :(:big), :nothing, esc(args[1]))
+        macro_swapliterals(:(:big), :(:big), :(:big), :nothing, :nothing, esc(args[1]))
     elseif length(args) == 4
-        macro_swapliterals(args[1], args[2], args[3], :nothing, esc(args[4]))
+        macro_swapliterals(args[1:3]..., :nothing, :nothing, esc(args[4]))
     elseif length(args) == 5
-        macro_swapliterals(args[1:4]..., esc(args[5]))
+        macro_swapliterals(args[1:4]..., :nothing, esc(args[5]))
+    elseif length(args) == 6
+        macro_swapliterals(args[1:5]..., esc(args[6]))
     else
         throw(ArgumentError("wrong number of arguments"))
     end

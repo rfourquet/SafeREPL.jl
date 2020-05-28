@@ -147,6 +147,15 @@ using BitIntegers, SaferIntegers
         x = 1111111111111111111111111111111111111111
         @test x isa BigInt
     end
+
+    # strings
+    @swapliterals nothing nothing nothing nothing "@r_str" begin
+        @test "123" isa Regex
+    end
+
+    @swapliterals nothing nothing nothing nothing :Symbol begin
+        @test "123" isa Symbol
+    end
 end
 
 ## playing with floats_use_rationalize!()

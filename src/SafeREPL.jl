@@ -158,7 +158,7 @@ end
 
 function swapliterals!(swap::Bool)
     if swap
-        swapliterals!(:big, :big, :big)
+        swapliterals!()
     else # deactivate
         filter!(f -> parentmodule(f) != @__MODULE__, get_transforms())
     end

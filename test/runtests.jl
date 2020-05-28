@@ -18,6 +18,23 @@ using BitIntegers, SaferIntegers
         @test $1.2 isa Float64
     end
 
+    # next three blocs should be equivalent
+    @swapliterals begin
+        @test 1.2 isa BigFloat
+        @test 1 isa BigInt
+        @test 11111111111111111111 isa BigInt
+    end
+    @swapliterals :big :big :big begin
+        @test 1.2 isa BigFloat
+        @test 1 isa BigInt
+        @test 11111111111111111111 isa BigInt
+    end
+    @swapliterals Float64=:big Int=:big Int128=:big begin
+        @test 1.2 isa BigFloat
+        @test 1 isa BigInt
+        @test 11111111111111111111 isa BigInt
+    end
+
     # TODO: these tests in loop are dubious
     for T in Base.BitUnsigned_types
         @test typeof(swapbig(T(1))) == T
@@ -157,11 +174,11 @@ using BitIntegers, SaferIntegers
 
 
     # strings
-    @swapliterals nothing nothing nothing nothing "@r_str" begin
+    @swapliterals String = "@r_str" begin
         @test "123" isa Regex
     end
 
-    @swapliterals nothing nothing nothing nothing :Symbol begin
+    @swapliterals String = :Symbol begin
         @test "123" isa Symbol
     end
 end

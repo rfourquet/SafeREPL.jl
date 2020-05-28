@@ -130,13 +130,15 @@ function swapliterals!(Float64::BigArgs,
     swapliterals!(; Float64, Int, Int128, BigInt)
 end
 
+const defaultswaps = (Float64   = :big,
+                      Int       = :big,
+                      Int128    = :big,
+                      firsttime = true)
+
 function swapliterals!(; firsttime=false, swaps...)
     @nospecialize
     if isempty(swaps) # equivalent to swapliterals!(true)
-        swaps = (Float64   = :big,
-                 Int       = :big,
-                 Int128    = :big,
-                 firsttime = true)
+        swaps = defaultswaps
     end
     # firsttime: when loading, avoiding filtering shaves off few tens of ms
     firsttime || swapliterals!(false) # remove previous settings
@@ -174,24 +176,44 @@ transform_arg(@nospecialize(x)) =
         throw(ArgumentError("invalid argument"))
     end
 
-function macro_swapliterals(ex, swaps...)
-    swaps = map(transform_arg, swaps)
-    n = NamedTuple{(:Float64, :Int, :Int128, :BigInt, :String)}(swaps)
-    literalswapper(; n...)
-end
+macro swapliterals(swaps...)
 
-macro swapliterals(args...)
-    if length(args) == 1
-        macro_swapliterals(esc(args[1]), :(:big), :(:big), :(:big), :nothing, :nothing)
-    elseif length(args) == 4
-        macro_swapliterals(esc(args[4]), args[1:3]..., :nothing, :nothing)
-    elseif length(args) == 5
-        macro_swapliterals(esc(args[5]), args[1:4]..., :nothing)
-    elseif length(args) == 6
-        macro_swapliterals(esc(args[6]), args[1:5]...)
+    length(swaps) == 1 &&
+        return literalswapper(; defaultswaps...)(esc(swaps[1]))
+
+    # either there are keyword arguments (handled first),
+    # or positional arguments (handled second), but not both
+
+    if swaps[1] isa Expr
+        ex = esc(swaps[end])
+        swaps = swaps[1:end-1]
+
+        all(sw -> Meta.isexpr(sw, :(=), 2), swaps) ||
+            throw(ArgumentError("invalid keyword argument"))
+
+        # keys are wrapped inside Expr, so get them out as
+        # NamedTuple keys
+        swaps = NamedTuple{Tuple(sw.args[1] for sw in swaps)}(
+                           Tuple(sw.args[2] for sw in swaps))
     else
-        throw(ArgumentError("wrong number of arguments"))
+        for a in swaps[1:end-1]
+            a isa Union{QuoteNode,String} || a == :nothing ||
+                throw(ArgumentError("invalid argument: $a"))
+        end
+
+        ex = esc(swaps[end])
+
+        if length(swaps) == 4
+            swaps = (Float64=swaps[1], Int=swaps[2], Int128=swaps[3])
+        elseif length(swaps) == 5
+            swaps = (Float64=swaps[1], Int=swaps[2], Int128=swaps[3], BigInt=swaps[4])
+        else
+            throw(ArgumentError("wrong number of arguments"))
+        end
     end
+
+    swaps = map(transform_arg, swaps)
+    literalswapper(; swaps...)(ex)
 end
 
 

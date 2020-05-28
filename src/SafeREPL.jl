@@ -5,10 +5,7 @@ using REPL
 function __init__()
     activate = get(ENV, "SAFEREPL_INIT", "true")
     if activate == "true"
-        swapliterals!(Float64   = :big,
-                      Int       = :big,
-                      Int128    = :big,
-                      firsttime = true)
+        swapliterals!(firsttime = true)
     end
 end
 
@@ -135,7 +132,12 @@ end
 
 function swapliterals!(; firsttime=false, swaps...)
     @nospecialize
-
+    if isempty(swaps) # equivalent to swapliterals!(true)
+        swaps = (Float64   = :big,
+                 Int       = :big,
+                 Int128    = :big,
+                 firsttime = true)
+    end
     # firsttime: when loading, avoiding filtering shaves off few tens of ms
     firsttime || swapliterals!(false) # remove previous settings
     transforms = get_transforms()

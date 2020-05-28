@@ -30,67 +30,52 @@ function literalswapper(swapfloat::BigArgs,
                         swapstr::BigArgs=nothing)
 
     @nospecialize
+
+    swapof = (Float64 = swapfloat,
+              Int32 = swapint,
+              Int64 = swapint,
+              Int128 = swapint128,
+              BigInt = swapbig,
+              String = swapstr)
+
+    function swapper(@nospecialize(ex::Union{Float64,Int,String}), quoted=false)
+        swap = swapof[Symbol(typeof(ex))]
+        if quoted || swap === nothing
+            ex
+        elseif !(ex isa Int) && swap isa String
+            Expr(:macrocall, Symbol(swap), nothing, string(ex))
+        elseif ex isa Float64 && FLOATS_USE_RATIONALIZE[]
+            if swap == :big # big(1//2) doesn't return BigFloat
+                swap = :BigFloat
+            end
+            :($swap(rationalize($ex)))
+        else
+            :($swap($ex))
+        end
+    end
+
     function swapper(@nospecialize(ex), quoted=false)
-        if ex isa Float64
-            if quoted || swapfloat === nothing
-                ex
-            elseif swapfloat isa String
-                Expr(:macrocall, Symbol(swapfloat), nothing, string(ex))
-            elseif FLOATS_USE_RATIONALIZE[]
-                if swapfloat == :big # big(1//2) doesn't return BigFloat
-                    swapfloat = :BigFloat
-                end
-                :($swapfloat(rationalize($ex)))
-            else
-                :($swapfloat($ex))
-            end
-        elseif ex isa Int
-            if quoted || swapint === nothing
-                ex
-            else
-                :($swapint($ex))
-            end
-        elseif ex isa Expr && ex.head == :macrocall &&
+        if ex isa Expr && ex.head == :macrocall &&
             ex.args[1] isa GlobalRef &&
-            ex.args[1].name == Symbol("@int128_str")
+            ex.args[1].name ∈ (Symbol("@int128_str"),
+                               Symbol("@big_str"))
 
-            if quoted || swapint128 === nothing
+            swap = swapof[ex.args[1].name == Symbol("@big_str") ?
+                          :BigInt :
+                          :Int128]
+
+            if quoted || swap === nothing
                 ex
             else
-                if swapint128 == :big
-                    swapint128 = "@big_str"
+                if swap == :big
+                    swap = "@big_str"
                 end
-                if swapint128 isa String
-                    ex.args[1] = Symbol(swapint128)
+                if swap isa String
+                    ex.args[1] = Symbol(swap)
                     ex
                 else # Symbol
-                    :($swapint128($ex))
+                    :($swap($ex))
                 end
-            end
-        elseif ex isa Expr && ex.head == :macrocall &&
-            ex.args[1] isa GlobalRef &&
-            ex.args[1].name == Symbol("@big_str")
-
-            if quoted || swapbig === nothing
-                ex
-            else
-                if swapbig == :big
-                    swapbig = "@big_str"
-                end
-                if swapbig isa String
-                    ex.args[1] = Symbol(swapbig)
-                    ex
-                else # Symbol
-                    :($swapbig($ex))
-                end
-            end
-        elseif ex isa String
-            if quoted || swapstr === nothing
-                ex
-            elseif swapstr isa String
-                Expr(:macrocall, Symbol(swapstr), nothing, ex)
-            else
-                :($swapstr($ex))
             end
         else
             ex =

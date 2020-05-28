@@ -173,13 +173,15 @@ using BitIntegers, SaferIntegers
     @test eval(kwswapper(:1111111111111111111111111111111111111111)) isa BigInt
 
 
-    # strings
-    @swapliterals String = "@r_str" begin
+    # strings & chars
+    @swapliterals Char=:string String = "@r_str" begin
         @test "123" isa Regex
+        @test 'a' isa String
     end
 
-    @swapliterals String = :Symbol begin
+    @swapliterals Char = :UInt String = :Symbol begin
         @test "123" isa Symbol
+        @test 'a' === 0x0000000000000061
     end
 end
 

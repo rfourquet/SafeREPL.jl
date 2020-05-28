@@ -31,13 +31,13 @@ end
 function literalswapper(; swaps...)
     @nospecialize
 
-    function swapper(@nospecialize(ex::Union{Float64,Int,String}), quoted=false)
+    function swapper(@nospecialize(ex::Union{Float64,Int,String,Char}), quoted=false)
         ts = ex isa Int ? :Int : Symbol(typeof(ex))
         swap = get(swaps, ts, nothing)
 
         if quoted || swap === nothing
             ex
-        elseif !(ex isa Int) && swap isa String
+        elseif ex isa Union{Float64,String} && swap isa String
             Expr(:macrocall, Symbol(swap), nothing, string(ex))
         elseif ex isa Float64 && FLOATS_USE_RATIONALIZE[]
             if swap == :big # big(1//2) doesn't return BigFloat

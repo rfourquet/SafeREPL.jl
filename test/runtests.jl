@@ -1,7 +1,7 @@
 using Test
 
 using SafeREPL
-using SafeREPL: literalswapper, @swapliterals
+using SafeREPL: literalswapper
 using BitIntegers, SaferIntegers
 
 @testset "swapliterals" begin

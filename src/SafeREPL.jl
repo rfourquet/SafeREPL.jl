@@ -1,5 +1,7 @@
 module SafeREPL
 
+export swapliterals!, @swapliterals
+
 using REPL
 
 function __init__()

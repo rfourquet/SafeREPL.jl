@@ -21,10 +21,6 @@ via `rationalize` before being further transformed.
 """
 floats_use_rationalize!(yesno::Bool=true) = FLOATS_USE_RATIONALIZE[] = yesno
 
-
-const SmallArgs = Union{Nothing,Symbol}
-const BigArgs = Union{Nothing,String,Symbol}
-
 function literalswapper(Float64, Int, Int128, BigInt=nothing)
     @nospecialize
     literalswapper(; Float64, Int, Int128, BigInt)
@@ -32,6 +28,9 @@ end
 
 function literalswapper(; swaps...)
     @nospecialize
+
+    all(kv -> kv[2] isa Union{String,Symbol,Nothing}, swaps) ||
+        throw(ArgumentError("unsupported type for swapper"))
 
     function swapper(@nospecialize(ex::Union{Float32,Float64,Int,String,Char,
                                              Base.BitUnsigned64}), quoted=false)
@@ -130,10 +129,10 @@ A transformation can be
   which will be applied to the input. Available only for
   `Int128` and `BigInt`, and experimentally for `Float64`.
 """
-function swapliterals!(Float64::BigArgs,
-                       Int::SmallArgs,
-                       Int128::BigArgs,
-                       BigInt::BigArgs=nothing)
+function swapliterals!(Float64,
+                       Int,
+                       Int128,
+                       BigInt=nothing)
     @nospecialize
     swapliterals!(; Float64, Int, Int128, BigInt)
 end

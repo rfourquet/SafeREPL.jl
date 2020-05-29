@@ -176,6 +176,15 @@ using BitIntegers, SaferIntegers
     @test eval(kwswapper(:11111111111111111111)) isa Int128
     @test eval(kwswapper(:1111111111111111111111111111111111111111)) isa BigInt
 
+    # Float32
+    @swapliterals Float32=:big begin
+        @test 1.2f0 == big"1.2000000476837158203125"
+    end
+    @swapliterals Float32="@big_str" begin
+        @test 1.2f0 == big"1.2"
+    end
+
+
     # unsigned
     @swapliterals UInt8=:Int UInt16=:Int UInt32=:Int UInt64=:Int UInt128=:Int128 begin
         @test 0x1 isa Int
@@ -211,22 +220,26 @@ end
 # can't be in a @testset apparently, probably because the parsing
 # in @testset is done before floats_use_rationalize!() takes effect
 
-@swapliterals "@big_str" nothing nothing nothing begin
+@swapliterals Float32="@big_str" Float64="@big_str" begin
     @test 1.2 == big"1.2"
+    @test 1.2f0 == big"1.2"
 end
 
 SafeREPL.floats_use_rationalize!()
-@swapliterals begin
+@swapliterals Float32="@big_str" Float64="@big_str" begin
     @test 1.2 == big"1.2"
+    @test 1.2f0 == big"1.2"
 end
 
 # try again, with explicit `true` arg, and with :BigFloat instead of :big
 SafeREPL.floats_use_rationalize!(true)
-@swapliterals :BigFloat nothing nothing begin
+@swapliterals Float32=:BigFloat Float64=:BigFloat begin
     @test 1.2 == big"1.2"
+    @test 1.2f0 == big"1.2"
 end
 
 SafeREPL.floats_use_rationalize!(false)
-@swapliterals :BigFloat nothing nothing begin
+@swapliterals Float32=:BigFloat Float64=:BigFloat begin
     @test 1.2 == big"1.1999999999999999555910790149937383830547332763671875"
+    @test 1.2f0 == big"1.2000000476837158203125"
 end

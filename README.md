@@ -187,6 +187,39 @@ atreplinit() do repl
 end
 ```
 
+### Switching easily back and forth
+
+You can set up a keybinding to activate or de-activate `SafeREPL`, e.g.
+`Ctrl-x` followed by `Ctrl-s`, by putting the following in "startup.jl":
+
+```julia
+using REPL
+
+const mykeys = Dict(
+    "^x^s" => function (s, o...)
+                  swapliterals!(!SafeREPL.isactive())
+                  REPL.LineEdit.refresh_line(s)
+              end
+)
+
+atreplinit() do repl
+    repl.interface = REPL.setup_interface(repl; extra_repl_keymap = mykeys)
+end
+```
+Cf. the [manual](https://docs.julialang.org/en/v1.4/stdlib/REPL/#Customizing-keybindings-1) for details.
+Note that `REPL.setup_interface` should be called only once, so to set up
+a keybinding together with a custom prompt as shown in last section,
+both `atreplinit` calls must be combined, e.g.
+
+```julia
+atreplinit() do repl
+    repl.interface = REPL.setup_interface(repl; extra_repl_keymap = mykeys)
+    julia_mode = repl.interface.modes[1]
+
+    # ... modify julia_mode
+end
+```
+
 
 ### Caveats
 

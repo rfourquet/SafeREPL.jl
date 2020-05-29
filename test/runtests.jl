@@ -184,6 +184,11 @@ using BitIntegers, SaferIntegers
         @test 1.2f0 == big"1.2"
     end
 
+    # string swappers
+    @swapliterals Int="@big_str" UInt8="@raw_str" begin
+        @test 1 isa BigInt
+        @test 0x01 === "1"
+    end
 
     # unsigned
     @swapliterals UInt8=:Int UInt16=:Int UInt32=:Int UInt64=:Int UInt128=:Int128 begin

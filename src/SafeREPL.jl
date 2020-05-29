@@ -42,14 +42,14 @@ function literalswapper(; swaps...)
 
         if quoted || swap === nothing
             ex
-        elseif ex isa Union{Float32,Float64,String} && swap isa String
+        elseif swap isa String
             Expr(:macrocall, Symbol(swap), nothing, string(ex))
         elseif ex isa AbstractFloat && FLOATS_USE_RATIONALIZE[]
             if swap == :big # big(1//2) doesn't return BigFloat
                 swap = :BigFloat
             end
             :($swap(rationalize($ex)))
-        else
+        else # ex isa Symbol
             :($swap($ex))
         end
     end

@@ -229,6 +229,8 @@ using BitIntegers, SaferIntegers
         @test "123" isa Symbol
         @test 'a' === 0x0000000000000061
     end
+
+    @test_throws ArgumentError literalswapper(Array=:Int)
 end
 
 ## playing with floats_use_rationalize!()

@@ -28,6 +28,12 @@ function literalswapper(; swaps...)
     all(kv -> kv[2] isa Union{String,Symbol,Nothing}, swaps) ||
         throw(ArgumentError("unsupported type for swapper"))
 
+    foreach(swaps) do kv
+        eval(kv[1]) ∈ [Float32,Float64,Int,String,Char,
+                       Base.BitUnsigned64_types...,Int128,UInt128,BigInt] ||
+                           throw(ArgumentError("type $(kv[1]) cannot be replaced"))
+    end
+
     function swapper(@nospecialize(ex::Union{Float32,Float64,Int,String,Char,
                                              Base.BitUnsigned64}), quoted=false)
         ts = Symbol(typeof(ex))

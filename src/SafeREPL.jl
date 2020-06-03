@@ -9,6 +9,8 @@ using REPL
 
 __init__() = swapliterals!(firsttime = true)
 
+const LAST_SWAPPER = Ref{Function}()
+
 
 function get_transforms()
     if isdefined(Base, :active_repl_backend) &&
@@ -53,16 +55,18 @@ function swapliterals!(; firsttime=false, swaps...)
     if transforms === nothing
         @warn "$(@__MODULE__) could not be loaded"
     else
-        push!(transforms, literalswapper(; swaps...))
+        LAST_SWAPPER[] = literalswapper(; swaps...)
+        push!(transforms, LAST_SWAPPER[])
     end
     nothing
 end
 
-function swapliterals!(swap::Bool)
-    if swap
-        swapliterals!()
-    else # deactivate
-        filter!(f -> parentmodule(f) != SwapLiterals, get_transforms())
+function swapliterals!(activate::Bool)
+    transforms = get_transforms()
+    # first always de-activate
+    filter!(f -> parentmodule(f) != SwapLiterals, transforms)
+    if activate
+        push!(transforms, LAST_SWAPPER[])
     end
     nothing
 end

@@ -17,11 +17,6 @@ via `rationalize` before being further transformed.
 """
 floats_use_rationalize!(yesno::Bool=true) = FLOATS_USE_RATIONALIZE[] = yesno
 
-function literalswapper(Float64, Int, Int128, BigInt=nothing)
-    @nospecialize
-    literalswapper(; Float64, Int, Int128, BigInt)
-end
-
 function literalswapper(; swaps...)
     @nospecialize
 

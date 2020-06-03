@@ -5,6 +5,12 @@ using SwapLiterals: literalswapper, floats_use_rationalize!
 
 using BitIntegers, SaferIntegers
 
+# temporary
+function SwapLiterals.literalswapper(Float64, Int, Int128, BigInt=nothing)
+    @nospecialize
+    literalswapper(; Float64, Int, Int128, BigInt)
+end
+
 @testset "swapliterals" begin
     swapbig = literalswapper(:BigFloat, :big, "@big_str")
     @test swapbig(1) == :(big(1))

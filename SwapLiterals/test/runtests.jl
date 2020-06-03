@@ -1,7 +1,8 @@
 using Test
 
-using SafeREPL
-using SafeREPL: literalswapper
+using SwapLiterals
+using SwapLiterals: literalswapper, floats_use_rationalize!
+
 using BitIntegers, SaferIntegers
 
 @testset "swapliterals" begin
@@ -230,20 +231,20 @@ end
     @test 1.2f0 == big"1.2"
 end
 
-SafeREPL.floats_use_rationalize!()
+floats_use_rationalize!()
 @swapliterals Float32="@big_str" Float64="@big_str" begin
     @test 1.2 == big"1.2"
     @test 1.2f0 == big"1.2"
 end
 
 # try again, with explicit `true` arg, and with :BigFloat instead of :big
-SafeREPL.floats_use_rationalize!(true)
+floats_use_rationalize!(true)
 @swapliterals Float32=:BigFloat Float64=:BigFloat begin
     @test 1.2 == big"1.2"
     @test 1.2f0 == big"1.2"
 end
 
-SafeREPL.floats_use_rationalize!(false)
+floats_use_rationalize!(false)
 @swapliterals Float32=:BigFloat Float64=:BigFloat begin
     @test 1.2 == big"1.1999999999999999555910790149937383830547332763671875"
     @test 1.2f0 == big"1.2000000476837158203125"

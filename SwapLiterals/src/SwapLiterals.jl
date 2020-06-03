@@ -30,10 +30,13 @@ function literalswapper(; swaps...)
 
     function swapper(@nospecialize(ex::Union{Float32,Float64,Int,String,Char,
                                              Base.BitUnsigned64}), quoted=false)
-        ts = ex isa Int ? :Int : Symbol(typeof(ex))
+        ts = Symbol(typeof(ex))
         swap = get(swaps, ts, nothing)
+
         if ex isa UInt && swap === nothing
             swap = get(swaps, :UInt, nothing)
+        elseif ex isa Int && swap === nothing
+            swap = get(swaps, :Int, nothing)
         end
 
         if quoted || swap === nothing

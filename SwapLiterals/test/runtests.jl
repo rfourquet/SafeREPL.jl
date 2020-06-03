@@ -191,6 +191,16 @@ using BitIntegers, SaferIntegers
         @test 0x01 === "1"
     end
 
+    # Int & UInt
+    @swapliterals Int=:UInt8 UInt=:Int8 begin
+        @test 1 isa UInt8
+        @test 0x0000000000000001 isa Int8
+    end
+    @swapliterals Int64=:UInt8 UInt64=:Int8 begin
+        @test 1 isa UInt8
+        @test 0x0000000000000001 isa Int8
+    end
+
     # unsigned
     @swapliterals UInt8=:Int UInt16=:Int UInt32=:Int UInt64=:Int UInt128=:Int128 begin
         @test 0x1 isa Int

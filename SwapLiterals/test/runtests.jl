@@ -33,7 +33,7 @@ using BitIntegers, SaferIntegers
         @test 1 isa BigInt
         @test 11111111111111111111 isa BigInt
     end
-    @swapliterals Float64="@big_str" Int=:big Int128=:big begin
+    @swapliterals Float64=>"@big_str" Int=>:big Int128=>:big begin
         @test 1.2 isa BigFloat
         @test 1.2 == big"1.2"
         @test 1 isa BigInt
@@ -178,31 +178,31 @@ using BitIntegers, SaferIntegers
     @test eval(kwswapper(:1111111111111111111111111111111111111111)) isa BigInt
 
     # Float32
-    @swapliterals Float32=:big begin
+    @swapliterals Float32 => :big begin
         @test 1.2f0 == big"1.2000000476837158203125"
     end
-    @swapliterals Float32="@big_str" begin
+    @swapliterals Float32 => "@big_str" begin
         @test 1.2f0 == big"1.2"
     end
 
     # string swappers
-    @swapliterals Int="@big_str" UInt8="@raw_str" begin
+    @swapliterals Int => "@big_str" UInt8 => "@raw_str" begin
         @test 1 isa BigInt
         @test 0x01 === "1"
     end
 
     # Int & UInt
-    @swapliterals Int=:UInt8 UInt=:Int8 begin
+    @swapliterals Int => :UInt8 UInt => :Int8 begin
         @test 1 isa UInt8
         @test 0x0000000000000001 isa Int8
     end
-    @swapliterals Int64=:UInt8 UInt64=:Int8 begin
+    @swapliterals Int64=>:UInt8 UInt64=>:Int8 begin
         @test 1 isa UInt8
         @test 0x0000000000000001 isa Int8
     end
 
     # unsigned
-    @swapliterals UInt8=:Int UInt16=:Int UInt32=:Int UInt64=:Int UInt128=:Int128 begin
+    @swapliterals UInt8=>:Int UInt16=>:Int UInt32=>:Int UInt64=>:Int UInt128=>:Int128 begin
         @test 0x1 isa Int
         @test 0x0001 isa Int
         @test $0x0001 isa UInt16
@@ -214,18 +214,18 @@ using BitIntegers, SaferIntegers
         @test 0x00000000000000000000000000000001 isa Int128
         @test $0x00000000000000000000000000000001 isa UInt128
     end
-    @swapliterals UInt128="@int128_str" begin
+    @swapliterals UInt128=>"@int128_str" begin
         @test 0x00000000000000000000000000000001 isa Int128
         @test $0x00000000000000000000000000000001 isa UInt128
     end
 
     # strings & chars
-    @swapliterals Char=:string String = "@r_str" begin
+    @swapliterals Char=>:string String => "@r_str" begin
         @test "123" isa Regex
         @test 'a' isa String
     end
 
-    @swapliterals Char = :UInt String = :Symbol begin
+    @swapliterals Char => :UInt String => :Symbol begin
         @test "123" isa Symbol
         @test 'a' === 0x0000000000000061
     end

@@ -130,8 +130,17 @@ macro swapliterals(swaps...)
         ex = esc(swaps[end])
         swaps = swaps[1:end-1]
 
-        all(sw -> Meta.isexpr(sw, :(=), 2), swaps) ||
-            throw(ArgumentError("invalid keyword argument"))
+        if Meta.isexpr(swaps[1], :call, 3)
+            # convert `=>` expressions to `=` expressions
+            swaps = map(swaps) do sw
+                Meta.isexpr(sw, :call, 3) && sw.args[1] == :(=>) ||
+                    throw(ArgumentError("invalid pair argument"))
+                Expr(:(=), sw.args[2], sw.args[3])
+            end
+        else
+            all(sw -> Meta.isexpr(sw, :(=), 2), swaps) ||
+                throw(ArgumentError("invalid keyword argument"))
+        end
 
         # keys are wrapped inside Expr, so get them out as
         # NamedTuple keys

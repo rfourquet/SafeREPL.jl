@@ -61,6 +61,10 @@ function swapliterals!(; firsttime=false, swaps...)
     nothing
 end
 
+function swapliterals!(swaps::Pair...)
+    swapliterals!(; [Symbol(first(sw)) => last(sw) for sw in swaps]...)
+end
+
 function swapliterals!(activate::Bool)
     transforms = get_transforms()
     # first always de-activate

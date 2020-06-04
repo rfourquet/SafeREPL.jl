@@ -236,6 +236,26 @@ literalswapper(F, I, I128, B=nothing) =
     end
 
     @test_throws ArgumentError literalswapper(Array=>:Int)
+
+    # function swappers
+    @swapliterals UInt8 => (x -> x+1) Int => UInt8 Int128 => (ex -> ex.args[3]) begin
+        @test 0x01 == 2.0
+        @test 1 isa UInt8
+        @test 11111111111111111111 == "11111111111111111111"
+    end
+end
+
+# test name resolution for functions
+module TestModule
+
+using SwapLiterals, Test
+
+uint8(x) = UInt8(x)
+
+@swapliterals Int => uint8  Char => (x -> uint8(x)+1) begin
+    @test 1 isa UInt8
+    @test 'a' == 0x62
+end
 end
 
 ## playing with floats_use_rationalize!()

@@ -21,7 +21,9 @@ floats_use_rationalize!(yesno::Bool=true) = FLOATS_USE_RATIONALIZE[] = yesno
 function literalswapper(swaps)
     @nospecialize
 
-    all(kv -> kv[2] isa Union{String,Symbol,Nothing}, swaps) ||
+    # Base.Callable might be overly restrictive for callables, this check should
+    # probably be removed eventually
+    all(kv -> kv[2] isa Union{String,Symbol,Nothing,Base.Callable}, swaps) ||
         throw(ArgumentError("unsupported type for swapper"))
 
     foreach(swaps) do kv
@@ -45,8 +47,10 @@ function literalswapper(swaps)
                 swap = :BigFloat
             end
             :($swap(rationalize($ex)))
-        else # ex isa Symbol
+        elseif swap isa Symbol
             :($swap($ex))
+        else
+            swap(ex)
         end
     end
 
@@ -71,8 +75,10 @@ function literalswapper(swaps)
                 if swap isa String
                     ex.args[1] = Symbol(swap)
                     ex
-                else # Symbol
+                elseif swap isa Symbol
                     :($swap($ex))
+                else
+                    swap(ex)
                 end
             end
         else
@@ -104,15 +110,20 @@ end
 
 ## macro
 
-transform_arg(@nospecialize(x)) =
+transform_arg(mod, @nospecialize(x)) =
     if x isa QuoteNode
         x.value
     elseif x == :nothing
         nothing
     elseif x isa String
         x
+    elseif x isa Symbol
+        getfield(mod, x)
+    elseif x isa Expr
+        swap = mod.eval(x)
+        ex -> Base.invokelatest(swap, ex)
     else
-        throw(ArgumentError("invalid argument"))
+        throw(ArgumentError("invalid swapper type: $(typeof(x))"))
     end
 
 macro swapliterals(swaps...)
@@ -157,7 +168,7 @@ macro swapliterals(swaps...)
         end
     end
 
-    swaps = Any[k => transform_arg(v) for (k, v) in swaps]
+    swaps = Any[k => transform_arg(__module__, v) for (k, v) in swaps]
     literalswapper(swaps)(ex)
 end
 

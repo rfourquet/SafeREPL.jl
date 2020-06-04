@@ -10,6 +10,8 @@ literalswapper(sw::Pair...) = SwapLiterals.literalswapper(sw)
 literalswapper(F, I, I128, B=nothing) =
     literalswapper(Float64=>F, Int=>I, Int128=>I128, BigInt=>B)
 
+makeset(ex) = Expr(:call, :Set, Expr(:vect, ex.args...))
+
 @testset "swapliterals" begin
     swapbig = literalswapper(:BigFloat, :big, "@big_str")
     @test swapbig(1) == :(big(1))
@@ -242,6 +244,20 @@ literalswapper(F, I, I128, B=nothing) =
         @test 0x01 == 2.0
         @test 1 isa UInt8
         @test 11111111111111111111 == "11111111111111111111"
+    end
+
+    # :braces, :tuple, :vect
+    @swapliterals  :braces => makeset :tuple => makeset :vect => makeset begin
+        r = push!(Set{Int}(), 1, 2, 3)
+        s = {1, 2, 3}
+        @test s isa Set{Int}
+        @test s == r
+        s = [1, 2, 3]
+        @test s isa Set{Int}
+        @test s == r
+        s = (1, 2, 3)
+        @test s isa Set{Int}
+        @test s == r
     end
 end
 

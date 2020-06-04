@@ -27,9 +27,10 @@ function literalswapper(swaps)
         throw(ArgumentError("unsupported type for swapper"))
 
     foreach(swaps) do kv
-        kv[1] ∈ [Float32,Float64,Int,String,Char,
-                 Base.BitUnsigned64_types...,Int128,UInt128,BigInt] ||
-                     throw(ArgumentError("type $(kv[1]) cannot be replaced"))
+        kv[1] ∈ Any[Float32,Float64,Int,String,Char,
+                    Base.BitUnsigned64_types...,Int128,UInt128,BigInt,
+                    :braces, :tuple, :vect] ||
+                        throw(ArgumentError("type $(kv[1]) cannot be replaced"))
     end
     swaps = Dict(swaps) # TODO: use ImmutableDict
 
@@ -55,7 +56,8 @@ function literalswapper(swaps)
     end
 
     function swapper(@nospecialize(ex::Expr), quoted=false)
-        if ex.head == :macrocall &&
+        h = ex.head
+        if h == :macrocall &&
             ex.args[1] isa GlobalRef &&
             ex.args[1].name ∈ (Symbol("@int128_str"),
                                Symbol("@uint128_str"),
@@ -81,8 +83,15 @@ function literalswapper(swaps)
                     swap(ex)
                 end
             end
+        elseif h ∈ (:braces, :tuple, :vect)
+            swap = get(swaps, h, nothing)
+            if quoted || swap === nothing
+                ex
+            else
+                swap(ex)
+            end
         else
-            ex = let h = ex.head
+            ex = let
                 # copied from REPL.softscope
                 if h in (:meta, :import, :using, :export, :module, :error, :incomplete, :thunk)
                     ex
@@ -136,17 +145,20 @@ macro swapliterals(swaps...)
         ex = esc(swaps[end])
         swaps = swaps[1:end-1]
 
+        transform_src(x::Symbol) = getfield(Base, x)
+        transform_src(x::QuoteNode) = x.value # for `:braces`, etc.
+
         if Meta.isexpr(swaps[1], :call, 3) # pairs
             swaps = map(swaps) do sw
                 Meta.isexpr(sw, :call, 3) && sw.args[1] == :(=>) ||
                     throw(ArgumentError("invalid pair argument"))
-                getfield(Base, sw.args[2]) => sw.args[3]
+                transform_src(sw.args[2]) => sw.args[3]
             end
         else
             swaps = map(swaps) do sw # keyword arguments
                 Meta.isexpr(sw, :(=), 2) ||
                     throw(ArgumentError("invalid keyword argument"))
-                getfield(Base, sw.args[1]) => sw.args[2]
+                transform_src(sw.args[1]) => sw.args[2]
             end
         end
     else

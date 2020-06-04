@@ -3,7 +3,7 @@ module SafeREPL
 export swapliterals!
 
 
-using SwapLiterals: SwapLiterals, literalswapper, defaultswaps
+using SwapLiterals: SwapLiterals, literalswapper, defaultswaps, floats_use_rationalize!
 using REPL
 
 

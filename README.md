@@ -185,6 +185,9 @@ literals (open an issue if you really need this feature).
 
 ### For the adventurous
 
+<details>
+    <summary>Are you sure?</summary>
+
 Few more literals can be substituted: arrays and tuples, and the `{}` vector
 syntax, which are specified respectively as `:vect`, `:tuple`, `:braces`.
 For example:
@@ -308,6 +311,7 @@ Expr
 julia> @btime 1 + 2
   63.765 ns (2 allocations: 48 bytes)
 ```
+</details>
 
 ### How to use in source code?
 

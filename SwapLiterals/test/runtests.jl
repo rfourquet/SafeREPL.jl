@@ -259,6 +259,11 @@ makeset(ex) = Expr(:call, :Set, Expr(:vect, ex.args...))
         @test s isa Set{Int}
         @test s == r
     end
+    @swapliterals :tuple => :collect begin
+        v = (1, 2, 3)
+        @test v isa Vector{Int}
+        @test v == [1, 2, 3]
+    end
 end
 
 # test name resolution for functions

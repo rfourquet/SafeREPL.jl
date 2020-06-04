@@ -87,6 +87,8 @@ function literalswapper(swaps)
             swap = get(swaps, h, nothing)
             if quoted || swap === nothing
                 ex
+            elseif swap isa Symbol
+                :($swap($ex))
             else
                 swap(ex)
             end

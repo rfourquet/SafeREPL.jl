@@ -1,15 +1,14 @@
 using Test
 
 using SwapLiterals
-using SwapLiterals: literalswapper, floats_use_rationalize!
+using SwapLiterals: floats_use_rationalize!
 
 using BitIntegers, SaferIntegers
 
-# temporary
-function SwapLiterals.literalswapper(Float64, Int, Int128, BigInt=nothing)
-    @nospecialize
-    literalswapper(; Float64, Int, Int128, BigInt)
-end
+literalswapper(sw::Pair...) = SwapLiterals.literalswapper(sw)
+
+literalswapper(F, I, I128, B=nothing) =
+    literalswapper(Float64=>F, Int=>I, Int128=>I128, BigInt=>B)
 
 @testset "swapliterals" begin
     swapbig = literalswapper(:BigFloat, :big, "@big_str")
@@ -177,7 +176,7 @@ end
     end
 
     # kwargs
-    kwswapper = literalswapper(Int=:big)
+    kwswapper = literalswapper(Int=>:big)
     @test eval(kwswapper(1.2)) isa Float64
     @test eval(kwswapper(1)) isa BigInt
     @test eval(kwswapper(:11111111111111111111)) isa Int128
@@ -236,7 +235,7 @@ end
         @test 'a' === 0x0000000000000061
     end
 
-    @test_throws ArgumentError literalswapper(Array=:Int)
+    @test_throws ArgumentError literalswapper(Array=>:Int)
 end
 
 ## playing with floats_use_rationalize!()

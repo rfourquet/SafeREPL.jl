@@ -5,9 +5,9 @@ export @swapliterals
 
 const FLOATS_USE_RATIONALIZE = Ref(false)
 
-const defaultswaps = (Float64   = "@big_str",
-                      Int       = :big,
-                      Int128    = :big)
+const defaultswaps = (Float64 => "@big_str",
+                      Int     => :big,
+                      Int128  => :big)
 
 """
     floats_use_rationalize!(yesno::Bool=true)
@@ -17,28 +17,24 @@ via `rationalize` before being further transformed.
 """
 floats_use_rationalize!(yesno::Bool=true) = FLOATS_USE_RATIONALIZE[] = yesno
 
-function literalswapper(; swaps...)
+# swaps is a collection of pairs
+function literalswapper(swaps)
     @nospecialize
 
     all(kv -> kv[2] isa Union{String,Symbol,Nothing}, swaps) ||
         throw(ArgumentError("unsupported type for swapper"))
 
     foreach(swaps) do kv
-        eval(kv[1]) ∈ [Float32,Float64,Int,String,Char,
-                       Base.BitUnsigned64_types...,Int128,UInt128,BigInt] ||
-                           throw(ArgumentError("type $(kv[1]) cannot be replaced"))
+        kv[1] ∈ [Float32,Float64,Int,String,Char,
+                 Base.BitUnsigned64_types...,Int128,UInt128,BigInt] ||
+                     throw(ArgumentError("type $(kv[1]) cannot be replaced"))
     end
+    swaps = Dict(swaps) # TODO: use ImmutableDict
 
     function swapper(@nospecialize(ex::Union{Float32,Float64,Int,String,Char,
                                              Base.BitUnsigned64}), quoted=false)
-        ts = Symbol(typeof(ex))
-        swap = get(swaps, ts, nothing)
 
-        if ex isa UInt && swap === nothing
-            swap = get(swaps, :UInt, nothing)
-        elseif ex isa Int && swap === nothing
-            swap = get(swaps, :Int, nothing)
-        end
+        swap = get(swaps, typeof(ex), nothing)
 
         if quoted || swap === nothing
             ex
@@ -62,8 +58,8 @@ function literalswapper(; swaps...)
                                Symbol("@big_str"))
 
             swap = get(swaps,
-                       ex.args[1].name == Symbol("@big_str") ? :BigInt :
-                       ex.args[1].name == Symbol("@int128_str") ? :Int128 : :UInt128,
+                       ex.args[1].name == Symbol("@big_str") ? BigInt :
+                       ex.args[1].name == Symbol("@int128_str") ? Int128 : UInt128,
                        nothing)
 
             if quoted || swap === nothing
@@ -122,31 +118,28 @@ transform_arg(@nospecialize(x)) =
 macro swapliterals(swaps...)
 
     length(swaps) == 1 &&
-        return literalswapper(; defaultswaps...)(esc(swaps[1]))
+        return literalswapper(defaultswaps)(esc(swaps[1]))
 
-    # either there are keyword arguments (handled first),
+    # either there are pairs/keyword arguments (handled first),
     # or positional arguments (handled second), but not both
 
     if swaps[1] isa Expr
         ex = esc(swaps[end])
         swaps = swaps[1:end-1]
 
-        if Meta.isexpr(swaps[1], :call, 3)
-            # convert `=>` expressions to `=` expressions
+        if Meta.isexpr(swaps[1], :call, 3) # pairs
             swaps = map(swaps) do sw
                 Meta.isexpr(sw, :call, 3) && sw.args[1] == :(=>) ||
                     throw(ArgumentError("invalid pair argument"))
-                Expr(:(=), sw.args[2], sw.args[3])
+                getfield(Base, sw.args[2]) => sw.args[3]
             end
         else
-            all(sw -> Meta.isexpr(sw, :(=), 2), swaps) ||
-                throw(ArgumentError("invalid keyword argument"))
+            swaps = map(swaps) do sw # keyword arguments
+                Meta.isexpr(sw, :(=), 2) ||
+                    throw(ArgumentError("invalid keyword argument"))
+                getfield(Base, sw.args[1]) => sw.args[2]
+            end
         end
-
-        # keys are wrapped inside Expr, so get them out as
-        # NamedTuple keys
-        swaps = NamedTuple{Tuple(sw.args[1] for sw in swaps)}(
-                           Tuple(sw.args[2] for sw in swaps))
     else
         for a in swaps[1:end-1]
             a isa Union{QuoteNode,String} || a == :nothing ||
@@ -156,16 +149,16 @@ macro swapliterals(swaps...)
         ex = esc(swaps[end])
 
         if length(swaps) == 4
-            swaps = (Float64=swaps[1], Int=swaps[2], Int128=swaps[3])
+            swaps = Any[Float64=>swaps[1], Int=>swaps[2], Int128=>swaps[3]]
         elseif length(swaps) == 5
-            swaps = (Float64=swaps[1], Int=swaps[2], Int128=swaps[3], BigInt=swaps[4])
+            swaps = Any[Float64=>swaps[1], Int=>swaps[2], Int128=>swaps[3], BigInt=>swaps[4]]
         else
             throw(ArgumentError("wrong number of arguments"))
         end
     end
 
-    swaps = map(transform_arg, swaps)
-    literalswapper(; swaps...)(ex)
+    swaps = Any[k => transform_arg(v) for (k, v) in swaps]
+    literalswapper(swaps)(ex)
 end
 
 

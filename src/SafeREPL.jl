@@ -44,25 +44,27 @@ function swapliterals!(Float64,
     swapliterals!(; Float64, Int, Int128, BigInt)
 end
 
-function swapliterals!(; firsttime=false, swaps...)
+function swapliterals!(swaps::Pair...; firsttime=false, kwswaps...)
     @nospecialize
-    if isempty(swaps) # equivalent to swapliterals!(true)
+    if !isempty(kwswaps)
+        isempty(swaps) ||
+            throw(ArgumentError("can't pass pairs *and* kwargs"))
+        swaps = Any[getfield(Base, first(sw)) => last(sw) for sw in kwswaps]
+    end
+    if isempty(swaps)
         swaps = defaultswaps
     end
+
     # firsttime: when loading, avoiding filtering shaves off few tens of ms
     firsttime || swapliterals!(false) # remove previous settings
     transforms = get_transforms()
     if transforms === nothing
         @warn "$(@__MODULE__) could not be loaded"
     else
-        LAST_SWAPPER[] = literalswapper(; swaps...)
+        LAST_SWAPPER[] = literalswapper(swaps)
         push!(transforms, LAST_SWAPPER[])
     end
     nothing
-end
-
-function swapliterals!(swaps::Pair...)
-    swapliterals!(; [Symbol(first(sw)) => last(sw) for sw in swaps]...)
 end
 
 function swapliterals!(activate::Bool)

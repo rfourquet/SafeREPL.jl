@@ -54,8 +54,8 @@ function literalswapper(swaps)
         end
     end
 
-    function swapper(@nospecialize(ex), quoted=false)
-        if ex isa Expr && ex.head == :macrocall &&
+    function swapper(@nospecialize(ex::Expr), quoted=false)
+        if ex.head == :macrocall &&
             ex.args[1] isa GlobalRef &&
             ex.args[1].name ∈ (Symbol("@int128_str"),
                                Symbol("@uint128_str"),
@@ -82,22 +82,18 @@ function literalswapper(swaps)
                 end
             end
         else
-            ex =
-                if ex isa Expr
-                    h = ex.head
-                    # copied from REPL.softscope
-                    if h in (:meta, :import, :using, :export, :module, :error, :incomplete, :thunk)
-                        ex
-                    elseif Meta.isexpr(ex, :$, 1)
-                        swapper(ex.args[1], true)
-                    else
-                        ex′ = Expr(h)
-                        map!(swapper, resize!(ex′.args, length(ex.args)), ex.args)
-                        ex′
-                    end
-                else
+            ex = let h = ex.head
+                # copied from REPL.softscope
+                if h in (:meta, :import, :using, :export, :module, :error, :incomplete, :thunk)
                     ex
+                elseif Meta.isexpr(ex, :$, 1)
+                    swapper(ex.args[1], true)
+                else
+                    ex′ = Expr(h)
+                    map!(swapper, resize!(ex′.args, length(ex.args)), ex.args)
+                    ex′
                 end
+            end
             if quoted
                 Expr(:$, ex)
             else
@@ -105,6 +101,8 @@ function literalswapper(swaps)
             end
         end
     end
+
+    swapper(@nospecialize(ex), quoted=false) = quoted ? Expr(:$, ex) : ex
 end
 
 

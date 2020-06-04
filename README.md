@@ -4,9 +4,9 @@
 ## SafeREPL
 
 The `SafeREPL` package allows to swap, in the REPL, the meaning of Julia's
-default (unannotated) float and integer literals
-(i.e. `Float64`, `Int`, `Int128` and `BigInt`).
-By default, the new defaults are `BigFloat` and `BigInt`.
+literals (in particular numbers).
+Upon loading, the default is to substitute `BigFloat` for `Float64` literals
+and `BigInt` for `Int` and `Int128` literals.
 A literal prefixed with `$` is left unchanged.
 
 ```julia
@@ -27,8 +27,11 @@ Int64
 
 This package requires Julia version at least 1.5. It is not yet registered,
 install it via:
+
 ```
-using Pkg; pkg"add https://github.com/rfourquet/SafeREPL.jl"
+using Pkg
+pkg"add https://github.com/rfourquet/SafeREPL.jl:SwapLiterals"
+pkg"add https://github.com/rfourquet/SafeREPL.jl"
 ```
 
 
@@ -42,17 +45,20 @@ Passing `nothing` means not transforming literals of this type, and
 a symbol is interpreted as the name of a function to be applied to the value.
 The last argument defaults to `nothing`.
 
-Finally, `swapliterals!(false)` deactivates `SafeREPL` and
-`swapliterals!(true)` or `swapliterals!()` activates the default setting
+A boolean value can also be passed: `swapliterals!(false)` deactivates `SafeREPL` and
+`swapliterals!(true)` re-activates it with the previous setting.
+Finally, `swapliterals!()` activates the default setting
 (what is enabled with `using SafeREPL`, which is equivalent to
-`swapliterals(:big, :big, :big)`).
+`swapliterals!("@big_str", :big, :big)`, see [below](#string-macros)
+for the meaning of `"@big_str"`).
+
 
 #### Examples
 
 ```julia
 julia> using BitIntegers, BitFloats
 
-julia> SafeREPL.swapliterals!(:Float128, :Int256, :Int256)
+julia> swapliterals!(:Float128, :Int256, :Int256)
 
 julia> log2(factorial(60))
 254.8391546883338
@@ -62,7 +68,7 @@ julia> sqrt(2.0)
 
 julia> using SaferIntegers, DoubleFloats
 
-julia> SafeREPL.swapliterals!(:DoubleFloat, :SafeInt, :SafeInt128)
+julia> swapliterals!(:DoubleFloat, :SafeInt, :SafeInt128)
 
 julia> typeof(2.0)
 Double64
@@ -77,7 +83,7 @@ ERROR: OverflowError: 10000000000000000000 * 10000000000000000000000000000000000
 Stacktrace:
 [...]
 
-julia> using Nemo; SafeREPL.swapliterals!(nothing, :fmpz, :fmpz, :fmpz)
+julia> using Nemo; swapliterals!(nothing, :fmpz, :fmpz, :fmpz)
 
 julia> factorial(100)
 93326215443944152681699238856266700490715968264381621468592963895217599993229915608941463976156518286253697920827223758251185210916864000000000000000000000000
@@ -92,12 +98,18 @@ ERROR: ArgumentError: invalid index: 1 of type fmpz
 julia> [1, 2, 3][$1] # ... so quote array indices
 1
 
-julia> SafeREPL.swapliterals!(false)
+julia> swapliterals!(false); typeof(1), typeof(1.0) # this swapliterals! doesn't act on this line!
+(fmpz, Float64)
 
 julia> typeof(1), typeof(1.0)
 (Int64, Float64)
 
-julia> SafeREPL.swapliterals!(true)
+julia> swapliterals!(true)
+
+julia> typeof(1), typeof(1.0)
+(fmpz, Float64)
+
+julia> swapliterals!() # activate defaults
 
 julia> typeof(1), typeof(1.0)
 (BigInt, BigFloat)
@@ -106,11 +118,11 @@ julia> typeof(1), typeof(1.0)
 
 ### String macros
 
-For `Int128` and `BigInt`, it's possible to pass the name of a string macro (as a `String`) instead
+For `Int128`, `UInt128` and `BigInt`, it's possible to pass the name of a string macro (as a `String`) instead
 of a symbol. In this case, the macro is used to directly interpret the number. For example:
 
 ```julia
-julia> SafeREPL.swapliterals!(nothing, nothing, "@int1024_str", "@int1024_str")
+julia> swapliterals!(nothing, nothing, "@int1024_str", "@int1024_str")
 
 julia> typeof(111111111111111111111111111111111)
 Int1024
@@ -124,7 +136,12 @@ As an experimental feature, when a string macro is passed to interpret `Float64`
 the input is then first converted to a `String` which is passed to the macro:
 
 ```julia
-julia> SafeREPL.swapliterals!("@big_str", nothing, nothing)
+julia> swapliterals!()
+
+julia> 2.6 - 0.7 - 1.9
+2.220446049250313e-16
+
+julia> swapliterals!(Float64 => "@big_str")
 
 julia> 1.2
 1.200000000000000000000000000000000000000000000000000000000000000000000000000007
@@ -134,25 +151,204 @@ true
 
 julia> 1.1999999999999999 == big"1.1999999999999999"
 false
+
+julia> 2.6 - 0.7 - 1.9
+-1.727233711018888925077270372560079914223200072887256277004740694033718360632485e-77
+
+julia> using DecFP; swapliterals!(Float64 => "@d64_str")
+
+julia> 2.6 - 0.7 - 1.9
+0.0
 ```
 
 
+### How to substitute other literals?
+
+The more general API to `swapliterals!` is to pass a list of pairs
+`SourceType => converter`, where `SourceType` is the type on which `converter` should
+be applied. For example:
+```julia
+julia> swapliterals!(Char => :string, Float32 => :Float64, UInt8 => UInt)
+
+julia> 'a', 1.2f0, 0x12
+("a", 1.2000000476837158, 0x0000000000000012)
+
+julia> using Strs; swapliterals!(String => :Str)
+
+julia> typeof("a")
+ASCIIStr
+```
+
+Notable exceptions which currently can't be converted are `Symbol` and `Bool`
+literals (open an issue if you really need this feature).
+
+
+### For the adventurous
+
+Few more literals can be substituted: arrays and tuples, and the `{}` vector
+syntax, which are specified respectively as `:vect`, `:tuple`, `:braces`.
+For example:
+```julia
+julia> swapliterals!(:vect => :Set)
+
+julia> [1, 2]
+Set{Int64} with 2 elements:
+  2
+  1
+
+julia> :[1, 2]
+:(Set([1, 2]))
+
+julia> $[1, 2]
+2-element Array{Int64,1}:
+ 1
+ 2
+```
+
+The next question is: how to uses the `:braces` syntax, given that it is not
+valid normal-Julia syntax? In addition to the previously mentioned
+converter types (`Symbol` and `String`), it's possible to pass a function
+which is used to transform the Julia AST:
+
+```julia
+julia> makeset(ex) = Expr(:call, :Set, Expr(:vect, ex.args...));
+
+julia> swapliterals!(:braces => makeset)
+
+julia> {1, 2, 3}
+Set{Int64} with 3 elements:
+  2
+  3
+  1
+```
+
+For types which are stored directly in the AST, using a symbol or
+a function is roughly equivalent (and using `$`-quotes or `:`-quotes
+is similarly equivalent), for example:
+
+```julia
+julia> swapliterals!(Int => Float64)
+
+julia> (1, :1, $1)
+1.0, 1, 1
+```
+
+Note that using functions is a rather experimental feature.
+
+A natural question arising pretty quickly is how `$`-quoting interacts
+with other `$`-quoting contexts, in particular with `BenchmarkTools`.
+With scalar-substitutions, this is mostly a non-issue, as we rarely `$`-quote
+literal numbers while benchmarking, but this is a bit more subtle
+when substituting container literals:
+
+```julia
+julia> swapliterals!(false)
+
+julia> @btime sum([1, 2]);
+  31.520 ns (1 allocation: 96 bytes)
+
+julia> @btime sum($[1, 2]);
+  3.129 ns (0 allocations: 0 bytes)
+
+julia> @btime sum($(Set([1, 2])));
+  20.090 ns (0 allocations: 0 bytes)
+
+julia> swapliterals!(:vect => makeset)
+
+julia> @btime sum($[1, 2]); # $[1, 2] is really a vector
+  31.459 ns (1 allocation: 96 bytes)
+
+julia> @btime sum($$[1, 2]); # BenchmarkTools-$-quoting for real [1, 2]
+  3.480 ns (0 allocations: 0 bytes)
+
+julia> @btime sum($(begin [1, 2] end)); # BenchmarkTools-$-quoting for real Set([1, 2])
+  19.786 ns (0 allocations: 0 bytes)
+
+julia> @btime sum($:[1, 2]) # ???
+  20.077 ns (0 allocations: 0 bytes)
+```
+
+Using a symbol versus a function can also have a subtle impact on benchmarking:
+```julia
+julia> swapliterals!(false)
+
+julia> @btime big(1) + big(2);
+  176.467 ns (6 allocations: 128 bytes)
+
+julia> @btime $(big(1)) + $(big(2));
+  71.681 ns (2 allocations: 48 bytes)
+
+julia> swapliterals!(Int => :big)
+
+julia> :(1 + 2)
+:(big(1) + big(2))
+
+julia> @btime 1 + 2
+  176.982 ns (6 allocations: 128 bytes)
+
+julia> swapliterals!(Int => big)
+
+julia> :(1 + 2)
+:(1 + 2)
+
+julia> dump(:(1 + 2))
+Expr
+  head: Symbol call
+  args: Array{Any}((3,))
+    1: Symbol +
+    2: BigInt
+      alloc: Int32 1
+      size: Int32 1
+      d: Ptr{UInt64} @0x0000000004662760
+    3: BigInt
+      alloc: Int32 1
+      size: Int32 1
+      d: Ptr{UInt64} @0x000000000356d4a0
+
+julia> @btime 1 + 2
+  63.765 ns (2 allocations: 48 bytes)
+```
+
 ### How to use in source code?
 
-Via the `@swapliterals` macro, with the same arguments as the `swapliterals!` function:
+Via the `@swapliterals` macro from the `SwapLiterals` package
+(which should be available to Julia versions `< v"1.5"` once
+it's registered).
+
+This macro has roughly the same API as the `swapliterals!` function:
+
 ```julia
-using SafeREPL: @swapliterals
+using SwapLiterals
 
 x = @swapliterals :big :big :big begin
     1.0, 2^123
 end
 typeof(x) # Tuple{BigFloat,BigInt}
+
 x = @swapliterals (1.0, 2^123) # shorter version, uses :big as defaults
 ```
-Note: if you try the above at the REPL, `typeof(x)` will be `Tuple{BigFloat,BigInt}`.
-Try first `SafeREPL.swapliterals!(false)` to deactivate `SafeREPL`.
+Note: if you try the above at the REPL while `SafeREPL` is also active, `typeof(x)`
+might be `Tuple{BigFloat,BigInt}`.
+Try first `swapliterals!(false)` to deactivate `SafeREPL`.
 
-_Warning_: this is alpha software and it's not recommended to use this macro in production.
+The pair API is also available, as well as the possibility to pass converters in
+a (literal) array for more clarity:
+
+```julia
+@swapliterals Int => :big 1
+
+x = @swapliterals [Int => :big,
+                   Int128 => :big,
+                   Float64 => big
+                  ] begin
+       1.0, 1, 111111111111111111111
+end
+typeof(x) # Tuple{BigFloat,BigInt,BigInt}
+```
+
+Note that passing a non-global function as the converter
+(to transform the AST, cf. [previous section](#for-the-adventurous))
+is likely to fail.
 
 
 ### Visual indicator that SafeREPL is active
@@ -223,7 +419,7 @@ end
 
 ### Caveats
 
-* This package was not tested on 32-bits architectures, help will be needed to support them.
+* This package was not tested on 32-bits architectures.
 
 * Using new number types by default in the REPL might reveal many missing methods
   for these types and render the REPL less usable than ideal.
@@ -233,7 +429,12 @@ end
 * float literals are stored as `Float64` in the Julia AST, meaning that information can be lost:
 
 ```julia
-julia> using SafeREPL; 1.2 # this is equivalent to `big(1.2)`
+julia> using SafeREPL; swapliterals!(Float64 => :big)
+
+julia> :(print(1.2))
+:(print(big(1.2)))
+
+julia> 1.2 # this is equivalent to `big(1.2)`
 1.1999999999999999555910790149937383830547332763671875
 
 julia> big"1.2"
@@ -241,7 +442,8 @@ julia> big"1.2"
 ```
 
 As said earlier, one can pass `"@big_str"` for the `Float64` converter to try
-to mitigate this problem. Another alternative (which does _not_ always produce
+to mitigate this problem: this is currently the default.
+Another alternative (which does _not_ always produce
 the same results as with `"@big_str"`) is to call `rationalize` before
 converting to a float.
 There is an experimental option to have `SafeREPL` implicitly insert
@@ -251,27 +453,40 @@ calls to `rationalize`, which is enabled by calling
 ```julia
 julia> bigfloat(x) = BigFloat(rationalize(x));
 
-julia> SafeREPL.swapliterals!(:bigfloat, nothing, nothing)
+julia> swapliterals!(Float64 => :bigfloat)
 
 julia> 1.2
 1.200000000000000000000000000000000000000000000000000000000000000000000000000007
 
-julia> SafeREPL.swapliterals!(); SafeREPL.floats_use_rationalize!(true); 1.2
+julia> swapliterals!(Float64 => :big); SafeREPL.floats_use_rationalize!(true);
+
+julia> 1.2
 1.200000000000000000000000000000000000000000000000000000000000000000000000000007
 
 julia> 1.20000000000001
 1.200000000000010169642905566151645987816694259698096594761182517957654980952429
 
-julia> SafeREPL.swapliterals!("@big_str", nothing, nothing) # rationalize not used
+julia> swapliterals!(Float64 => "@big_str") # rationalize not used
 
 julia> 1.20000000000001
 1.200000000000010000000000000000000000000000000000000000000000000000000000000006
 ```
 
-Note that `bigfloat` could not be defined on the fly like in
-`swapliterals!(x -> BigFloat(rationalize(x)), nothing, nothing)`,
-because `swapliterals!` requires symbol names. Passing a function
-is currently reserved for possible future features.
+
+### How "safe" is it?
+
+This is totally up to the user. Some Julia users get disappointed when
+they encounter some "unsafe" arithmetic operations (due for example
+to integer overflow). "Safe" in `SafeREPL` must be understood tongue-in-cheek,
+and applies to the default setting where some overflows will disappear.
+This package can make Julia quite more unsafe, here is a "soft" example:
+
+```julia
+julia> swapliterals!(Int => x -> x % Int8)
+
+julia> 1234
+-46
+```
 
 
 ### Alternatives

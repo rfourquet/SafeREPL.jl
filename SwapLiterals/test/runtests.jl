@@ -247,7 +247,10 @@ makeset(ex) = Expr(:call, :Set, Expr(:vect, ex.args...))
     end
 
     # :braces, :tuple, :vect
-    @swapliterals  :braces => makeset :tuple => makeset :vect => makeset begin
+    @swapliterals [:braces => makeset,
+                   :tuple => makeset,
+                   :vect => makeset
+                   ] begin
         r = push!(Set{Int}(), 1, 2, 3)
         s = {1, 2, 3}
         @test s isa Set{Int}

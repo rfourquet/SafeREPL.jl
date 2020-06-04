@@ -140,6 +140,10 @@ macro swapliterals(swaps...)
     length(swaps) == 1 &&
         return literalswapper(defaultswaps)(esc(swaps[1]))
 
+    if length(swaps) == 2 && swaps[1] isa Expr && swaps[1].head == :vect
+        swaps = Any[swaps[1].args..., swaps[2]]
+    end
+
     # either there are pairs/keyword arguments (handled first),
     # or positional arguments (handled second), but not both
 

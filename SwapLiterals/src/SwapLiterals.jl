@@ -84,6 +84,7 @@ function literalswapper(swaps)
                 end
             end
         elseif h ∈ (:braces, :tuple, :vect)
+            ex = recswap(ex)
             swap = get(swaps, h, nothing)
             if quoted || swap === nothing
                 ex
@@ -93,23 +94,26 @@ function literalswapper(swaps)
                 swap(ex)
             end
         else
-            ex = let
-                # copied from REPL.softscope
-                if h in (:meta, :import, :using, :export, :module, :error, :incomplete, :thunk)
-                    ex
-                elseif Meta.isexpr(ex, :$, 1)
-                    swapper(ex.args[1], true)
-                else
-                    ex′ = Expr(h)
-                    map!(swapper, resize!(ex′.args, length(ex.args)), ex.args)
-                    ex′
-                end
-            end
+            ex = recswap(ex)
             if quoted
                 Expr(:$, ex)
             else
                 ex
             end
+        end
+    end
+
+    function recswap(ex)
+        h = ex.head
+        # copied from REPL.softscope
+        if h in (:meta, :import, :using, :export, :module, :error, :incomplete, :thunk)
+            ex
+        elseif Meta.isexpr(ex, :$, 1)
+            swapper(ex.args[1], true)
+        else
+            ex′ = Expr(h)
+            map!(swapper, resize!(ex′.args, length(ex.args)), ex.args)
+            ex′
         end
     end
 

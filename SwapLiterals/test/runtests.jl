@@ -267,6 +267,14 @@ makeset(ex) = Expr(:call, :Set, Expr(:vect, ex.args...))
         @test v isa Vector{Int}
         @test v == [1, 2, 3]
     end
+
+    # test that swapper is applied recursively
+    @swapliterals :tuple => makeset Int => :big begin
+        @test (1, 2) isa Set{BigInt}
+    end
+    @swapliterals Int => :big begin
+        @test (1, 2) isa Tuple{BigInt,BigInt}
+    end
 end
 
 # test name resolution for functions

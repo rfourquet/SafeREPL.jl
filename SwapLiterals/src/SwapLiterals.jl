@@ -39,7 +39,9 @@ function literalswapper(swaps)
 
         swap = get(swaps, typeof(ex), nothing)
 
-        if quoted || swap === nothing
+        if swap === nothing
+            requote(ex, quoted)
+        elseif quoted
             ex
         elseif swap isa String
             Expr(:macrocall, Symbol(swap), nothing, string(ex))
@@ -68,7 +70,9 @@ function literalswapper(swaps)
                        ex.args[1].name == Symbol("@int128_str") ? Int128 : UInt128,
                        nothing)
 
-            if quoted || swap === nothing
+            if swap === nothing
+                requote(ex, quoted)
+            elseif quoted
                 ex
             else
                 if swap == :big
@@ -86,7 +90,9 @@ function literalswapper(swaps)
         elseif h ∈ (:braces, :tuple, :vect)
             ex = recswap(ex)
             swap = get(swaps, h, nothing)
-            if quoted || swap === nothing
+            if swap === nothing
+                requote(ex, quoted)
+            elseif quoted
                 ex
             elseif swap isa Symbol
                 :($swap($ex))
@@ -117,7 +123,11 @@ function literalswapper(swaps)
         end
     end
 
-    swapper(@nospecialize(ex), quoted=false) = quoted ? Expr(:$, ex) : ex
+    requote(@nospecialize(ex), quoted) = quoted ? Expr(:$, ex) : ex
+
+    swapper(@nospecialize(ex), quoted=false) = requote(ex, quoted)
+
+    swapper
 end
 
 

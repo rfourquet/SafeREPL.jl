@@ -76,7 +76,8 @@ makeset(ex) = Expr(:call, :Set, Expr(:vect, ex.args...))
 
         @test $1.0 isa Float64
         @test $11111111111111111111 isa Int128
-        @test $1111111111111111111111111111111111111111 isa BigInt
+        # throws as un-handled quote
+        # @test $1111111111111111111111111111111111111111 isa BigInt
     end
 
     swap128 = literalswapper(:Float64, :Int128, "@int128_str")
@@ -238,6 +239,14 @@ makeset(ex) = Expr(:call, :Set, Expr(:vect, ex.args...))
     end
 
     @test_throws ArgumentError literalswapper(Array=>:Int)
+
+    # quoted expressions which are not handled by a swapper remain quoted
+    swapper = literalswapper(Char=>UInt)
+    @test 'a' !== swapper('a') == 0x61
+    @test swapper(Expr(:$, 'a')) === 'a'
+    @test_throws ErrorException eval(swapper(Expr(:$, 1)))
+    @test_throws ErrorException eval(swapper(Expr(:$, :11111111111111111111)))
+    @test_throws ErrorException eval(swapper(Expr(:$, :1111111111111111111111111111111111111111)))
 
     # function swappers
     @swapliterals UInt8 => (x -> x+1) Int => UInt8 Int128 => (ex -> ex.args[3]) begin

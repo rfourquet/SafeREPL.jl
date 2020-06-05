@@ -3,11 +3,13 @@ module SafeREPL
 export swapliterals!
 
 
-using SwapLiterals: SwapLiterals, literalswapper, defaultswaps, floats_use_rationalize!
+using SwapLiterals: SwapLiterals, literalswapper, defaultswaps,
+                    floats_use_rationalize!, makedict
+
 using REPL
 
 
-__init__() = swapliterals!()
+__init__() = swapliterals!(defaultswaps)
 
 const LAST_SWAPPER = Ref{Function}()
 
@@ -44,19 +46,8 @@ function swapliterals!(Float64,
     swapliterals!(; Float64, Int, Int128, BigInt)
 end
 
-function swapliterals!(swaps::Pair...; kwswaps...)
+function swapliterals!(swaps::AbstractDict)
     @nospecialize
-    if !isempty(kwswaps)
-        isempty(swaps) ||
-            throw(ArgumentError("can't pass pairs *and* kwargs"))
-        swaps = Any[getfield(Base, first(sw)) => last(sw) for sw in kwswaps]
-    end
-    if isempty(swaps)
-        swaps = defaultswaps
-        isdefault = true
-    else
-        isdefault = swaps === defaultswaps
-    end
 
     # first time called: when loading, avoiding filtering shaves off few tens of ms
     isassigned(LAST_SWAPPER) && swapliterals!(false) # remove previous settings
@@ -65,13 +56,24 @@ function swapliterals!(swaps::Pair...; kwswaps...)
     if transforms === nothing
         @warn "$(@__MODULE__) could not be loaded"
     else
-        LAST_SWAPPER[] = isdefault ?
+        LAST_SWAPPER[] = swaps === defaultswaps ?
             SwapLiterals.default_literalswapper :
             literalswapper(swaps)
 
         push!(transforms, LAST_SWAPPER[])
     end
     nothing
+end
+
+# called only when !isempty(swaps)
+swapliterals!(swaps::Pair...) = swapliterals!(makedict(swaps))
+
+# non-public API when !isempty(kwswaps)
+function swapliterals!(; kwswaps...)
+    swapliterals!(
+        isempty(kwswaps) ?
+            defaultswaps :
+            makedict(Any[getfield(Base, first(sw)) => last(sw) for sw in kwswaps]))
 end
 
 function swapliterals!(activate::Bool)

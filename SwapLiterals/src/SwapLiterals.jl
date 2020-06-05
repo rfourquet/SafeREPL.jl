@@ -5,9 +5,9 @@ export @swapliterals
 
 const FLOATS_USE_RATIONALIZE = Ref(false)
 
-const defaultswaps = (Float64 => "@big_str",
-                      Int     => :big,
-                      Int128  => :big)
+const defaultswaps = Any[Float64 => "@big_str",
+                         Int     => :big,
+                         Int128  => :big]
 
 """
     floats_use_rationalize!(yesno::Bool=true)
@@ -32,7 +32,8 @@ function literalswapper(swaps)
                     :braces, :tuple, :vect] ||
                         throw(ArgumentError("type $(kv[1]) cannot be replaced"))
     end
-    swaps = Dict(swaps) # TODO: use ImmutableDict
+
+    swaps = Dict{Any,Any}(swaps) # TODO: use ImmutableDict
 
     function swapper(@nospecialize(ex::Union{Float32,Float64,Int,String,Char,
                                              Base.BitUnsigned64}), quoted=false)
@@ -109,7 +110,7 @@ function literalswapper(swaps)
         end
     end
 
-    function recswap(ex)
+    function recswap(@nospecialize(ex))
         h = ex.head
         # copied from REPL.softscope
         if h in (:meta, :import, :using, :export, :module, :error, :incomplete, :thunk)

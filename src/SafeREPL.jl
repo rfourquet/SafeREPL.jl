@@ -5,15 +5,18 @@ Base.Experimental.@optlevel 0
 export swapliterals!
 
 
-using SwapLiterals: SwapLiterals, literalswapper, defaultswaps,
-                    floats_use_rationalize!, makedict
+using SwapLiterals: SwapLiterals, makedict, floats_use_rationalize!,
+                    literalswapper, default_literalswapper, defaultswaps
 
 using REPL
 
 
-__init__() = swapliterals!(defaultswaps)
+function __init__()
+    # condensed equivalent version of `swapliterals!()`, for faster loading
+    push!(get_transforms(), default_literalswapper)
+end
 
-const LAST_SWAPPER = Ref{Function}()
+const LAST_SWAPPER = Ref{Function}(default_literalswapper)
 
 
 function get_transforms()
@@ -46,18 +49,13 @@ function swapliterals!(Float64,
     swapliterals!(; Float64, Int, Int128, BigInt)
 end
 
-function swapliterals!(swaps::AbstractDict)
-    @nospecialize
+function swapliterals!(@nospecialize(swaps::AbstractDict))
+    swapliterals!(false) # remove previous settings
 
-    # first time called: when loading, avoiding filtering shaves off few tens of ms
-    isassigned(LAST_SWAPPER) && swapliterals!(false) # remove previous settings
+    LAST_SWAPPER[] = swaps === defaultswaps ? default_literalswapper :
+                                              literalswapper(swaps)
 
-    transforms = get_transforms()
-    LAST_SWAPPER[] = swaps === defaultswaps ?
-        SwapLiterals.default_literalswapper :
-        literalswapper(swaps)
-
-    push!(transforms, LAST_SWAPPER[])
+    push!(get_transforms(), LAST_SWAPPER[])
     nothing
 end
 

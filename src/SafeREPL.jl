@@ -20,10 +20,8 @@ function get_transforms()
     if isdefined(Base, :active_repl_backend) &&
         isdefined(Base.active_repl_backend, :ast_transforms)
         Base.active_repl_backend.ast_transforms::Vector{Any}
-    elseif isdefined(REPL, :repl_ast_transforms)
+    else isdefined(REPL, :repl_ast_transforms)
         REPL.repl_ast_transforms::Vector{Any}
-    else
-        nothing
     end
 end
 
@@ -55,15 +53,11 @@ function swapliterals!(swaps::AbstractDict)
     isassigned(LAST_SWAPPER) && swapliterals!(false) # remove previous settings
 
     transforms = get_transforms()
-    if transforms === nothing
-        @warn "$(@__MODULE__) could not be loaded"
-    else
-        LAST_SWAPPER[] = swaps === defaultswaps ?
-            SwapLiterals.default_literalswapper :
-            literalswapper(swaps)
+    LAST_SWAPPER[] = swaps === defaultswaps ?
+        SwapLiterals.default_literalswapper :
+        literalswapper(swaps)
 
-        push!(transforms, LAST_SWAPPER[])
-    end
+    push!(transforms, LAST_SWAPPER[])
     nothing
 end
 

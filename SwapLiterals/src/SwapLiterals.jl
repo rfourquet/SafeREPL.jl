@@ -5,9 +5,14 @@ export @swapliterals
 
 const FLOATS_USE_RATIONALIZE = Ref(false)
 
-const defaultswaps = Any[Float64 => "@big_str",
-                         Int     => :big,
-                         Int128  => :big]
+makedict(@nospecialize(pairs)) =
+    foldl(Base.ImmutableDict, pairs; init=Base.ImmutableDict{Any,Any}())
+
+makedict(@nospecialize(pairs::AbstractDict)) = pairs
+
+const defaultswaps = makedict(Any[Float64 => "@big_str",
+                                  Int     => :big,
+                                  Int128  => :big])
 
 """
     floats_use_rationalize!(yesno::Bool=true)
@@ -21,6 +26,8 @@ floats_use_rationalize!(yesno::Bool=true) = FLOATS_USE_RATIONALIZE[] = yesno
 function literalswapper(swaps)
     @nospecialize
 
+    swaps = makedict(swaps)
+
     # Base.Callable might be overly restrictive for callables, this check should
     # probably be removed eventually
     all(kv -> kv[2] isa Union{String,Symbol,Nothing,Base.Callable}, swaps) ||
@@ -33,7 +40,6 @@ function literalswapper(swaps)
                         throw(ArgumentError("type $(kv[1]) cannot be replaced"))
     end
 
-    swaps = Dict{Any,Any}(swaps) # TODO: use ImmutableDict
 
     function swapper(@nospecialize(ex::Union{Float32,Float64,Int,String,Char,
                                              Base.BitUnsigned64}), quoted=false)

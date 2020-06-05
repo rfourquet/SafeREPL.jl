@@ -26,20 +26,18 @@ floats_use_rationalize!(yesno::Bool=true) = FLOATS_USE_RATIONALIZE[] = yesno
 function literalswapper(swaps)
     @nospecialize
 
-    if swaps !== defaultswaps # save time on SafeREPL loading
-        swaps = makedict(swaps)
+    swaps = makedict(swaps)
 
-        # Base.Callable might be overly restrictive for callables, this check should
-        # probably be removed eventually
-        all(kv -> kv[2] isa Union{String,Symbol,Nothing,Base.Callable}, swaps) ||
-            throw(ArgumentError("unsupported type for swapper"))
+    # Base.Callable might be overly restrictive for callables, this check should
+    # probably be removed eventually
+    all(kv -> kv[2] isa Union{String,Symbol,Nothing,Base.Callable}, swaps) ||
+        throw(ArgumentError("unsupported type for swapper"))
 
-        foreach(swaps) do kv
-            kv[1] ∈ Any[Float32,Float64,Int,String,Char,
-                        Base.BitUnsigned64_types...,Int128,UInt128,BigInt,
-                        :braces, :tuple, :vect] ||
-                            throw(ArgumentError("type $(kv[1]) cannot be replaced"))
-        end
+    foreach(swaps) do kv
+        kv[1] ∈ Any[Float32,Float64,Int,String,Char,
+                    Base.BitUnsigned64_types...,Int128,UInt128,BigInt,
+                    :braces, :tuple, :vect] ||
+                        throw(ArgumentError("type $(kv[1]) cannot be replaced"))
     end
 
     function swapper(@nospecialize(ex::Union{Float32,Float64,Int,String,Char,
@@ -137,6 +135,9 @@ function literalswapper(swaps)
 
     swapper
 end
+
+# to save time loading SafeREPL
+const default_literalswapper = literalswapper(defaultswaps)
 
 
 ## macro

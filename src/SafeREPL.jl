@@ -53,6 +53,9 @@ function swapliterals!(swaps::Pair...; firsttime=false, kwswaps...)
     end
     if isempty(swaps)
         swaps = defaultswaps
+        isdefault = true
+    else
+        isdefault = swaps === defaultswaps
     end
 
     # firsttime: when loading, avoiding filtering shaves off few tens of ms
@@ -61,7 +64,10 @@ function swapliterals!(swaps::Pair...; firsttime=false, kwswaps...)
     if transforms === nothing
         @warn "$(@__MODULE__) could not be loaded"
     else
-        LAST_SWAPPER[] = literalswapper(swaps)
+        LAST_SWAPPER[] = isdefault ?
+            SwapLiterals.default_literalswapper :
+            literalswapper(swaps)
+
         push!(transforms, LAST_SWAPPER[])
     end
     nothing

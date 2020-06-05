@@ -1,5 +1,7 @@
 module SwapLiterals
 
+Base.Experimental.@optlevel 0
+
 export @swapliterals
 
 

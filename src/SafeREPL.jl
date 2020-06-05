@@ -7,7 +7,7 @@ using SwapLiterals: SwapLiterals, literalswapper, defaultswaps, floats_use_ratio
 using REPL
 
 
-__init__() = swapliterals!(firsttime = true)
+__init__() = swapliterals!()
 
 const LAST_SWAPPER = Ref{Function}()
 
@@ -44,7 +44,7 @@ function swapliterals!(Float64,
     swapliterals!(; Float64, Int, Int128, BigInt)
 end
 
-function swapliterals!(swaps::Pair...; firsttime=false, kwswaps...)
+function swapliterals!(swaps::Pair...; kwswaps...)
     @nospecialize
     if !isempty(kwswaps)
         isempty(swaps) ||
@@ -58,8 +58,9 @@ function swapliterals!(swaps::Pair...; firsttime=false, kwswaps...)
         isdefault = swaps === defaultswaps
     end
 
-    # firsttime: when loading, avoiding filtering shaves off few tens of ms
-    firsttime || swapliterals!(false) # remove previous settings
+    # first time called: when loading, avoiding filtering shaves off few tens of ms
+    isassigned(LAST_SWAPPER) && swapliterals!(false) # remove previous settings
+
     transforms = get_transforms()
     if transforms === nothing
         @warn "$(@__MODULE__) could not be loaded"

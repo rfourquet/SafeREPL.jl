@@ -443,6 +443,11 @@ end
   Good opportunity for opening ticket/issues in the corresponding projects :)
   In the meantime, this can be mitigated by the use of `$`.
 
+* It should be clear that using `BigInt` and `BigFloat` for literals instead
+  of `Int` and `Float64` can make some function calls quite more expensive,
+  time-wise and memory-wise. So `SafeREPL` just offers a different trade-off
+  than the default Julia REPL, it's not a panacea.
+
 * float literals are stored as `Float64` in the Julia AST, meaning that information can be lost:
 
 ```julia

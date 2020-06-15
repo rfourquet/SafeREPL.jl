@@ -513,9 +513,34 @@ julia> 1234
 
 ### Alternatives
 
-Before Julia 1.5, the easiest alternative was probably to use a custom REPL mode,
-and [ReplMaker.jl](https://github.com/MasonProtter/ReplMaker.jl#example-3-big-mode)
-even has an example to set this up in few lines.
+Before Julia 1.5, the easiest alternative was probably to use a custom REPL
+mode, and
+[ReplMaker.jl](https://github.com/MasonProtter/ReplMaker.jl#example-3-big-mode)
+even has an example to set this up in few lines. Here is a way to use
+`SwapLiterals` as a backend for a `ReplMaker`
+mode, which uses the `valid_julia` function defined in its
+[README](https://github.com/MasonProtter/ReplMaker.jl#example-1-expr-mode):
+
+```julia
+julia> literals_swapper = SwapLiterals.literalswapper([Int=>:big, Int128=>:big, Float64=>"@big_str"]);
+
+julia> function Big_parse(s)
+           expr = Meta.parse(s)
+           literals_swapper(expr)
+       end
+
+julia> initrepl(Big_parse,
+                prompt_text="BigJulia> ",
+                prompt_color = :red,
+                start_key='>',
+                mode_name="Big-Mode",
+                valid_input_checker=valid_julia)
+```
+
+The `SwapLiterals.literalswapper` function takes a list of pairs which have the
+same meaning as in `swapliterals!`. Note that it's currently not part of the
+public API of `SwapLiterals`.
+
 
 At least a couple of packages have a macro similar to `@swapliterals`:
 * [ChangePrecision.jl](https://github.com/stevengj/ChangePrecision.jl),

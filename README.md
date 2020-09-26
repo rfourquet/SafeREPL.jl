@@ -522,7 +522,7 @@ mode, which uses the `valid_julia` function defined in its
 [README](https://github.com/MasonProtter/ReplMaker.jl#example-1-expr-mode):
 
 ```julia
-julia> literals_swapper = SwapLiterals.literalswapper([Int=>:big, Int128=>:big, Float64=>"@big_str"]);
+julia> literals_swapper = SwapLiterals.literals_swapper([Int=>:big, Int128=>:big, Float64=>"@big_str"]);
 
 julia> function Big_parse(s)
            expr = Meta.parse(s)
@@ -537,7 +537,7 @@ julia> initrepl(Big_parse,
                 valid_input_checker=valid_julia)
 ```
 
-The `SwapLiterals.literalswapper` function takes a list of pairs which have the
+The `SwapLiterals.literals_swapper` function takes a list of pairs which have the
 same meaning as in `swapliterals!`. Note that it's currently not part of the
 public API of `SwapLiterals`.
 

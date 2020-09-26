@@ -27,7 +27,7 @@ via `rationalize` before being further transformed.
 floats_use_rationalize!(yesno::Bool=true) = FLOATS_USE_RATIONALIZE[] = yesno
 
 # swaps is a collection of pairs
-function literalswapper(swaps)
+function literals_swapper(swaps)
     @nospecialize
 
     swaps = makedict(swaps)
@@ -141,7 +141,7 @@ function literalswapper(swaps)
 end
 
 # to save time loading SafeREPL
-const default_literalswapper = literalswapper(defaultswaps)
+const default_literals_swapper = literals_swapper(defaultswaps)
 
 
 ## macro
@@ -165,7 +165,7 @@ transform_arg(mod, @nospecialize(x)) =
 macro swapliterals(swaps...)
 
     length(swaps) == 1 &&
-        return literalswapper(defaultswaps)(esc(swaps[1]))
+        return literals_swapper(defaultswaps)(esc(swaps[1]))
 
     if length(swaps) == 2 && swaps[1] isa Expr && swaps[1].head == :vect
         swaps = Any[swaps[1].args..., swaps[2]]
@@ -212,7 +212,7 @@ macro swapliterals(swaps...)
     end
 
     swaps = Any[k => transform_arg(__module__, v) for (k, v) in swaps]
-    literalswapper(swaps)(ex)
+    literals_swapper(swaps)(ex)
 end
 
 

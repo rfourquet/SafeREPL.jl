@@ -5,7 +5,7 @@ using SwapLiterals: floats_use_rationalize!
 
 using BitIntegers, SaferIntegers
 
-literalswapper(sw::Pair...) = SwapLiterals.literalswapper(sw)
+literalswapper(sw::Pair...) = SwapLiterals.literals_swapper(sw)
 
 literalswapper(F, I, I128, B=nothing) =
     literalswapper(Float64=>F, Int=>I, Int128=>I128, BigInt=>B)

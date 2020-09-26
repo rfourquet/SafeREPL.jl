@@ -6,17 +6,17 @@ export swapliterals!
 
 
 using SwapLiterals: SwapLiterals, makedict, floats_use_rationalize!,
-                    literalswapper, default_literalswapper, defaultswaps
+                    literals_swapper, default_literals_swapper, defaultswaps
 
 using REPL
 
 
 function __init__()
     # condensed equivalent version of `swapliterals!()`, for faster loading
-    push!(get_transforms(), default_literalswapper)
+    push!(get_transforms(), default_literals_swapper)
 end
 
-const LAST_SWAPPER = Ref{Function}(default_literalswapper)
+const LAST_SWAPPER = Ref{Function}(default_literals_swapper)
 
 
 function get_transforms()
@@ -52,8 +52,8 @@ end
 function swapliterals!(@nospecialize(swaps::AbstractDict))
     swapliterals!(false) # remove previous settings
 
-    LAST_SWAPPER[] = swaps === defaultswaps ? default_literalswapper :
-                                              literalswapper(swaps)
+    LAST_SWAPPER[] = swaps === defaultswaps ? default_literals_swapper :
+                                              literals_swapper(swaps)
 
     push!(get_transforms(), LAST_SWAPPER[])
     nothing

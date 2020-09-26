@@ -1,6 +1,8 @@
 module SwapLiterals
 
-Base.Experimental.@optlevel 0
+@static if isdefined(Base, :Experimental) && isdefined(Base.Experimental, Symbol("@optlevel"))
+   Base.Experimental.@optlevel 0
+end
 
 export @swapliterals
 

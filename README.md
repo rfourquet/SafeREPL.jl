@@ -25,13 +25,13 @@ Int64
 
 ### Installation
 
-This package requires Julia version at least 1.5. It is not yet registered,
-install it via:
-
+This package requires Julia version at least 1.5. It depends on a sub-package, `SwapLiterals`,
+described below, which requires only Julia 1.1.
+Both packages are registered and can be installed via
 ```
 using Pkg
-pkg"add https://github.com/rfourquet/SafeREPL.jl:SwapLiterals"
-pkg"add https://github.com/rfourquet/SafeREPL.jl"
+pkg"add SafeREPL"
+pkg"add SwapLiterals"
 ```
 
 
@@ -327,11 +327,8 @@ julia> @btime 1 + 2
 
 ### How to use in source code?
 
-Via the `@swapliterals` macro from the `SwapLiterals` package
-(which should be available to Julia versions `< v"1.5"` once
-it's registered).
-
-This macro has roughly the same API as the `swapliterals!` function:
+Via the `@swapliterals` macro from the `SwapLiterals` package,
+which has roughly the same API as the `swapliterals!` function:
 
 ```julia
 using SwapLiterals

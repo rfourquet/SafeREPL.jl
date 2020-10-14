@@ -5,8 +5,8 @@
 
 The `SafeREPL` package allows to swap, in the REPL, the meaning of Julia's
 literals (in particular numbers).
-Upon loading, the default is to substitute `BigFloat` for `Float64` literals
-and `BigInt` for `Int` and `Int128` literals.
+Upon loading, the default is to replace `Float64` literals with `BigFloat`,
+and `Int` and `Int128` literals with `BigInt`.
 A literal prefixed with `$` is left unchanged.
 
 ```julia
@@ -25,10 +25,11 @@ Int64
 
 ### Installation
 
-This package requires Julia version at least 1.5. It depends on a sub-package, `SwapLiterals`,
-described below, which requires only Julia 1.1.
+This package requires Julia version at least 1.5. It depends on a sub-package,
+`SwapLiterals`, described below, which requires only Julia 1.1.
 Both packages are registered and can be installed via
-```
+
+```julia
 using Pkg
 pkg"add SafeREPL"
 pkg"add SwapLiterals"
@@ -45,8 +46,8 @@ Passing `nothing` means not transforming literals of this type, and
 a symbol is interpreted as the name of a function to be applied to the value.
 The last argument defaults to `nothing`.
 
-A single boolean value can also be passed: `swapliterals!(false)` deactivates `SafeREPL` and
-`swapliterals!(true)` re-activates it with the previous setting.
+A single boolean value can also be passed: `swapliterals!(false)` deactivates
+`SafeREPL` and `swapliterals!(true)` re-activates it with the previous setting.
 Finally, `swapliterals!()` activates the default setting
 (what is enabled with `using SafeREPL`, which is equivalent to
 `swapliterals!("@big_str", :big, :big)`, see [below](#string-macros)
@@ -119,8 +120,8 @@ julia> typeof(1), typeof(1.0)
 ### How to substitute other literals?
 
 The more general API of `swapliterals!` is to pass a list of pairs
-`SourceType => converter`, where `SourceType` is the type on which `converter` should
-be applied. For example:
+`SourceType => converter`, where `SourceType` is the type on which `converter`
+should be applied. For example:
 
 ```julia
 julia> swapliterals!(Char => :string, Float32 => :Float64, UInt8 => :UInt)
@@ -141,8 +142,9 @@ feature).
 
 ### String macros
 
-For `Int128`, `UInt128` and `BigInt`, it's possible to pass the name of a string macro (as a `String`) instead
-of a symbol. In this case, the macro is used to directly interpret the number. For example:
+For `Int128`, `UInt128` and `BigInt`, it's possible to pass the name of a
+string macro (as a `String`) instead of a symbol.
+In this case, the macro is used to directly interpret the number. For example:
 
 ```julia
 julia> swapliterals!(Int128 => "@int1024_str", BigInt => "@int1024_str")
@@ -183,6 +185,7 @@ julia> using DecFP; swapliterals!(Float64 => "@d64_str")
 julia> 2.6 - 0.7 - 1.9
 0.0
 ```
+
 
 ### For the adventurous
 
@@ -325,6 +328,7 @@ julia> @btime 1 + 2
 ```
 </details>
 
+
 ### How to use in source code?
 
 Via the `@swapliterals` macro from the `SwapLiterals` package,
@@ -366,8 +370,8 @@ is likely to fail.
 
 ### Visual indicator that SafeREPL is active
 
-The following can be put in the "startup.jl" file to modify the color of the prompt,
-or to modify the text in the prompt. Tweak as necessary.
+The following can be put in the "startup.jl" file to modify the color of the
+prompt, or to modify the text in the prompt. Tweak as necessary.
 
 ```julia
 using REPL
@@ -396,6 +400,7 @@ atreplinit() do repl
 end
 ```
 
+
 ### Switching easily back and forth
 
 You can set up a keybinding to activate or de-activate `SafeREPL`, e.g.
@@ -415,7 +420,9 @@ atreplinit() do repl
     repl.interface = REPL.setup_interface(repl; extra_repl_keymap = mykeys)
 end
 ```
-Cf. the [manual](https://docs.julialang.org/en/v1.4/stdlib/REPL/#Customizing-keybindings-1) for details.
+Cf. the
+[manual](https://docs.julialang.org/en/v1.4/stdlib/REPL/#Customizing-keybindings-1)
+for details.
 Note that `REPL.setup_interface` should be called only once, so to set up
 a keybinding together with a custom prompt as shown in last section,
 both `atreplinit` calls must be combined, e.g.
@@ -445,7 +452,8 @@ end
   time-wise and memory-wise. So `SafeREPL` just offers a different trade-off
   than the default Julia REPL, it's not a panacea.
 
-* float literals are stored as `Float64` in the Julia AST, meaning that information can be lost:
+* float literals are stored as `Float64` in the Julia AST, meaning that
+  information can be lost:
 
 ```julia
 julia> using SafeREPL; swapliterals!(Float64 => :big)
@@ -498,7 +506,7 @@ This is totally up to the user. Some Julia users get disappointed when they
 encounter some "unsafe" arithmetic operations (due to integer overflow for
 example). "Safe" in `SafeREPL` must be understood tongue-in-cheek, and applies
 to the default setting where some overflows will disappear. This package can
-make Julia quite more unsafe, here is a "soft" example:
+make Julia quite more unsafe; here is a "soft" example:
 
 ```julia
 julia> swapliterals!(Int => x -> x % Int8)
@@ -513,9 +521,9 @@ julia> 1234
 Before Julia 1.5, the easiest alternative was probably to use a custom REPL
 mode, and
 [ReplMaker.jl](https://github.com/MasonProtter/ReplMaker.jl#example-3-big-mode)
-even has an example to set this up in few lines. Here is a way to use
-`SwapLiterals` as a backend for a `ReplMaker`
-mode, which uses the `valid_julia` function defined in its
+even has an example to set this up in few lines.
+Here is a way to use `SwapLiterals` as a backend for a `ReplMaker` mode,
+which uses the `valid_julia` function defined in its
 [README](https://github.com/MasonProtter/ReplMaker.jl#example-1-expr-mode):
 
 ```julia
@@ -534,10 +542,9 @@ julia> initrepl(Big_parse,
                 valid_input_checker=valid_julia)
 ```
 
-The `SwapLiterals.literals_swapper` function takes a list of pairs which have the
-same meaning as in `swapliterals!`. Note that it's currently not part of the
+The `SwapLiterals.literals_swapper` function takes a list of pairs which have
+the same meaning as in `swapliterals!`. Note that it's currently not part of the
 public API of `SwapLiterals`.
-
 
 At least a couple of packages have a macro similar to `@swapliterals`:
 * [ChangePrecision.jl](https://github.com/stevengj/ChangePrecision.jl),

@@ -326,6 +326,17 @@ Expr
 julia> @btime 1 + 2
   63.765 ns (2 allocations: 48 bytes)
 ```
+
+Finally, as an experimental feature, expressions involving `:=`
+can also be transformed, with the same mechanism, for example:
+```julia
+julia> swapliterals!(:(:=) => ex -> Expr(:(=),
+                                         Symbol(uppercase(String(ex.args[1]))),
+                                         ex.args[2:end]...))
+
+julia> a := 1; A # equivalent to `A = 1`
+1
+```
 </details>
 
 

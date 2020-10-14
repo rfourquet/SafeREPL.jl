@@ -12,6 +12,11 @@ literalswapper(F, I, I128, B=nothing) =
 
 makeset(ex) = Expr(:call, :Set, Expr(:vect, ex.args...))
 
+# just a random function, which transform `a := x` into `A := x`
+makecoloneq(ex) = Expr(:(=),
+                       Symbol(uppercase(String(ex.args[1]))),
+                       ex.args[2:end]...)
+
 @testset "swapliterals" begin
     swapbig = literalswapper(:BigFloat, :big, "@big_str")
     @test swapbig(1) == :(big(1))
@@ -275,6 +280,16 @@ makeset(ex) = Expr(:call, :Set, Expr(:vect, ex.args...))
         v = (1, 2, 3)
         @test v isa Vector{Int}
         @test v == [1, 2, 3]
+    end
+
+    # :(:=)
+    @swapliterals :(:=) => makecoloneq begin
+        a := 2
+        @test A == 2
+        @test !@isdefined(a)
+        bcd := 1, 2, 3
+        @test BCD == (1, 2, 3)
+        @test !@isdefined(bcd)
     end
 
     # test that swapper is applied recursively

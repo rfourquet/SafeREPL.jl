@@ -40,7 +40,7 @@ function literals_swapper(swaps)
     foreach(swaps) do kv
         kv[1] ∈ Any[Float32,Float64,Int,String,Char,
                     Base.BitUnsigned64_types...,Int128,UInt128,BigInt,
-                    :braces, :tuple, :vect] ||
+                    :braces, :tuple, :vect, :(:=)] ||
                         throw(ArgumentError("type $(kv[1]) cannot be replaced"))
     end
 
@@ -97,7 +97,7 @@ function literals_swapper(swaps)
                     swap(ex)
                 end
             end
-        elseif h ∈ (:braces, :tuple, :vect)
+        elseif h ∈ (:braces, :tuple, :vect, :(:=))
             ex = recswap(ex)
             swap = get(swaps, h, nothing)
             if swap === nothing

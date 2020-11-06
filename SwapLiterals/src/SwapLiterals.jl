@@ -38,13 +38,13 @@ function literals_swapper(swaps)
         throw(ArgumentError("unsupported type for swapper"))
 
     foreach(swaps) do kv
-        kv[1] ∈ Any[Float32,Float64,Int,String,Char,
+        kv[1] ∈ Any[Float32,Float64,Int32,Int64,String,Char,
                     Base.BitUnsigned64_types...,Int128,UInt128,BigInt,
                     :braces, :tuple, :vect, :(:=)] ||
                         throw(ArgumentError("type $(kv[1]) cannot be replaced"))
     end
 
-    function swapper(@nospecialize(ex::Union{Float32,Float64,Int,String,Char,
+    function swapper(@nospecialize(ex::Union{Float32,Float64,Int32,Int64,String,Char,
                                              Base.BitUnsigned64}), quoted=false)
 
         swap = get(swaps, typeof(ex), nothing)

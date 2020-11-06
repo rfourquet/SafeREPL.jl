@@ -207,9 +207,15 @@ makecoloneq(ex) = Expr(:(=),
     # Int & UInt
     @swapliterals Int => :UInt8 UInt => :Int8 begin
         @test 1 isa UInt8
-        @test 0x0000000000000001 isa Int8
+        if UInt === UInt64
+            @test 0x0000000000000001 isa Int8
+            @test 0x00000001 isa UInt32
+        else
+            @test 0x00000001 isa Int8
+            @test 0x0000000000000001 isa UInt64
+        end
     end
-    @swapliterals Int64=>:UInt8 UInt64=>:Int8 begin
+    @swapliterals Int32=>:UInt8 Int64=>:UInt8 UInt64=>:Int8 begin
         @test 1 isa UInt8
         @test 0x0000000000000001 isa Int8
     end
@@ -238,7 +244,7 @@ makecoloneq(ex) = Expr(:(=),
         @test 'a' isa String
     end
 
-    @swapliterals Char => :UInt String => :Symbol begin
+    @swapliterals Char => :UInt64 String => :Symbol begin
         @test "123" isa Symbol
         @test 'a' === 0x0000000000000061
     end

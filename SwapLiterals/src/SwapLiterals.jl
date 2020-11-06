@@ -14,9 +14,16 @@ makedict(@nospecialize(pairs)) =
 
 makedict(@nospecialize(pairs::AbstractDict)) = pairs
 
-const defaultswaps = makedict(Any[Float64 => "@big_str",
-                                  Int     => :big,
-                                  Int128  => :big])
+const defaultswaps =
+    let swaps = Any[Float64 => "@big_str",
+                    Int     => :big,
+                    Int128  => :big]
+
+        if Int === Int32
+            push!(swaps, Int64 => :big)
+        end
+        makedict(swaps)
+    end
 
 """
     floats_use_rationalize!(yesno::Bool=true)
@@ -208,6 +215,10 @@ macro swapliterals(swaps...)
             swaps = Any[Float64=>swaps[1], Int=>swaps[2], Int128=>swaps[3], BigInt=>swaps[4]]
         else
             throw(ArgumentError("wrong number of arguments"))
+        end
+        if Int !== Int64
+            # transform Int64 in the same way we transform Int == Int32
+            push!(swaps, Int64 => last(swaps[2]))
         end
     end
 

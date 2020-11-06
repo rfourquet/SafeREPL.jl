@@ -6,7 +6,7 @@
 The `SafeREPL` package allows to swap, in the REPL, the meaning of Julia's
 literals (in particular numbers).
 Upon loading, the default is to replace `Float64` literals with `BigFloat`,
-and `Int` and `Int128` literals with `BigInt`.
+and `Int`, `Int64` and `Int128` literals with `BigInt`.
 A literal prefixed with `$` is left unchanged.
 
 ```julia
@@ -45,6 +45,8 @@ The four arguments of this function correspond to
 Passing `nothing` means not transforming literals of this type, and
 a symbol is interpreted as the name of a function to be applied to the value.
 The last argument defaults to `nothing`.
+On 32-bits systems, `Int64` literals are transformed in the same way as `Int`
+literals.
 
 A single boolean value can also be passed: `swapliterals!(false)` deactivates
 `SafeREPL` and `swapliterals!(true)` re-activates it with the previous setting.

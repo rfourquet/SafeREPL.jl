@@ -25,10 +25,12 @@ makecoloneq(ex) = Expr(:(=),
     @swapliterals :BigFloat :big "@big_str" begin
         @test 1 == Int(1)
         @test 1 isa BigInt
+        @test 10000000000 isa BigInt # Int64 literals are transformed like Int literals
         @test 1.2 isa BigFloat
         @test 1.2 == big"1.1999999999999999555910790149937383830547332763671875"
         @test 1.0 == Float64(1.0)
         @test $1 isa Int
+        @test $10000000000 isa Int64 # even on 32-bits systems
         @test $1.2 isa Float64
     end
 
@@ -37,6 +39,7 @@ makecoloneq(ex) = Expr(:(=),
         @test 1.2 isa BigFloat
         @test 1.2 == big"1.2"
         @test 1 isa BigInt
+        @test 10000000000 isa BigInt # Int64 literals are transformed like Int literals
         @test 11111111111111111111 isa BigInt
     end
     @swapliterals "@big_str" :big :big begin
@@ -49,7 +52,21 @@ makecoloneq(ex) = Expr(:(=),
         @test 1.2 isa BigFloat
         @test 1.2 == big"1.2"
         @test 1 isa BigInt
+        if Int === Int64
+            @test 10000000000 isa BigInt
+        else
+            @test 10000000000 isa Int64 # Int64 literals are *not* transformed like Int literals
+        end
         @test 11111111111111111111 isa BigInt
+    end
+
+    @swapliterals Int64 => :big begin
+        if Int === Int64
+            @test 1 isa BigInt
+        else
+            @test 1 isa Int
+        end
+        @test 10000000000 isa BigInt
     end
 
     # TODO: these tests in loop are dubious
@@ -96,6 +113,10 @@ makecoloneq(ex) = Expr(:(=),
     @swapliterals :Float64 :Int128 "@int128_str" begin
         x = 1
         @test x == Int(1) && x isa Int128
+        x = 10000000000
+        @test x == big"10000000000"
+        @test x isa Int128 # Int64 literals are transformed like Int literals
+
         x = 11111111111111111111
         @test x == Int128(11111111111111111111) && x isa Int128
         x = 1111111111111111111111111111111111111111
@@ -113,6 +134,8 @@ makecoloneq(ex) = Expr(:(=),
     @swapliterals nothing nothing nothing begin
         x = 1.0
         @test x isa Float64
+        @test 1 isa Int
+        @test 10000000000 isa Int64
         x = 11111111111111111111
         @test x isa Int128
         x = 1111111111111111111111111111111111111111

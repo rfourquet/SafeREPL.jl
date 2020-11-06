@@ -34,6 +34,10 @@ end
 Specify transformations for literals:
 argument `Float64` corresponds to literals of type `Float64`, etcetera.
 
+!!! note
+    On 32-bits systems, the transformation for `Int` is also applied on
+    `Int64` literals.
+
 A transformation can be
 * a `Symbol`, to refer to a function, e.g. `:big`;
 * `nothing` to not transform literals of this type;
@@ -46,7 +50,11 @@ function swapliterals!(Float64,
                        Int128,
                        BigInt=nothing)
     @nospecialize
-    swapliterals!(; Float64, Int, Int128, BigInt)
+    if Base.Int === Base.Int64
+        swapliterals!(; Float64, Int, Int128, BigInt)
+    else
+        swapliterals!(; Float64, Int, Int64=Int, Int128, BigInt)
+    end
 end
 
 function swapliterals!(@nospecialize(swaps::AbstractDict))

@@ -29,7 +29,7 @@ function get_transforms()
 end
 
 """
-    SafeREPL.swapliterals!(Float64, Int, Int128, BigInt=nothing)
+    SafeREPL.swapliterals!(Float64, Int, Int128, BigInt=nothing, Float64=nothing)
 
 Specify transformations for literals:
 argument `Float64` corresponds to literals of type `Float64`, etcetera.
@@ -41,12 +41,12 @@ A transformation can be
   which will be applied to the input. Available only for
   `Int128` and `BigInt`, and experimentally for `Float64`.
 """
-function swapliterals!(Float64,
-                       Int,
+function swapliterals!(Int
                        Int128,
                        BigInt=nothing)
+                       Float64=nothing)
     @nospecialize
-    swapliterals!(; Float64, Int, Int128, BigInt)
+    swapliterals!(; Int, Int128, BigInt, Float64)
 end
 
 function swapliterals!(@nospecialize(swaps::AbstractDict))

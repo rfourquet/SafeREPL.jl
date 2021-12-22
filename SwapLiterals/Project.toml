@@ -1,7 +1,7 @@
 name    = "SwapLiterals"
 uuid    = "b9c42661-4c44-44aa-8691-47710c88d134"
 authors = ["Rafael Fourquet <fourquet.rafael@gmail.com>"]
-version = "0.1.1"
+version = "0.1.2"
 
 [extras]
 BitIntegers   = "c3b6d118-76ef-56ca-8cc7-ebb389d030a1"

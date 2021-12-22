@@ -196,6 +196,9 @@ julia> 2.6 - 0.7 - 1.9
 
 Few more literals can be substituted: arrays and tuples, and the `{}` vector
 syntax, which are specified respectively as `:vect`, `:tuple`, `:braces`.
+Vectors entered with `{}` delimiters but with elements separated with a newline
+instead of `,` can be specified as `:bracescat`.
+
 For example:
 ```julia
 julia> swapliterals!(:vect => :Set)
@@ -222,12 +225,18 @@ which is used to transform the Julia AST:
 ```julia
 julia> makeset(ex) = Expr(:call, :Set, Expr(:vect, ex.args...));
 
-julia> swapliterals!(:braces => makeset)
+julia> swapliterals!(:braces => makeset, :bracescat => makeset)
 
 julia> {1, 2, 3}
 Set{Int64} with 3 elements:
   2
   3
+  1
+
+julia> { 1
+         2 }
+Set{Int64} with 2 elements:
+  2
   1
 ```
 

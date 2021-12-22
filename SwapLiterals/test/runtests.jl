@@ -291,6 +291,7 @@ makecoloneq(ex) = Expr(:(=),
 
     # :braces, :tuple, :vect
     @swapliterals [:braces => makeset,
+                   :bracescat => makeset,
                    :tuple => makeset,
                    :vect => makeset
                    ] begin
@@ -302,6 +303,11 @@ makecoloneq(ex) = Expr(:(=),
         @test s isa Set{Int}
         @test s == r
         s = (1, 2, 3)
+        @test s isa Set{Int}
+        @test s == r
+        s = { 1
+              2
+              3 }
         @test s isa Set{Int}
         @test s == r
     end

@@ -81,14 +81,17 @@ end
 function swapliterals!(activate::Bool)
     transforms = get_transforms()
     # first always de-activate
-    filter!(f -> parentmodule(f) != SwapLiterals, transforms)
+    filter!(!is_swapliterals_transform, transforms)
     if activate
         push!(transforms, LAST_SWAPPER[])
     end
     nothing
 end
 
-isactive() = any(==(SwapLiterals) ∘ parentmodule, get_transforms())
+isactive() = any(is_swapliterals_transform, get_transforms())
+
+# typeof is necessary in cases where ff is a "functor" (a callable non-`Function`)
+is_swapliterals_transform(ff) = parentmodule(typeof(ff)) == SwapLiterals
 
 
 end # module
